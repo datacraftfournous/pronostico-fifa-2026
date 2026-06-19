@@ -18,19 +18,13 @@ export default function Layout() {
     <span>Pronósticos Familia y amigos</span>
     <br />
     <span style={{ 
-  fontSize: '0.65rem',
-  color: '#ffffff',
-  fontWeight: 700,
-  textShadow: `
-    0 0 5px #ffffff,
-    0 0 10px #ffffff,
-    0 0 15px #ffffff,
-    0 0 20px #ffffff,
-    0 0 30px rgba(255,255,255,0.8)
-  `
-}}>
-  Developed by Jhonny Alberto Anaya Mattos - Tiburon Flag 🦈
-</span>
+      fontSize: '0.65rem', 
+      color: 'var(--gold)', 
+      fontWeight: 600,
+      textShadow: '0 0 6px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.5)'
+    }}>
+       Developed by Jhonny Alberto Anaya Mattos - Tiburon Flag 🦈
+    </span>
   </div>
 </div>
 
