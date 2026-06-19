@@ -57,7 +57,7 @@ export default function Predictions() {
     setLoading(false)
   }
 
-  // 🔒 BLOQUEADO: ya no se permite guardar ni editar pronósticos
+  // 🔒 BLOQUEADO TOTAL: no existe guardado desde frontend
   async function handleSave() {
     return
   }
@@ -69,9 +69,7 @@ export default function Predictions() {
       source = source.filter(m => m.group_code === groupFilter)
     }
 
-    return [
-      ...new Set(source.map(m => getLocalDate(m.kickoff_at))),
-    ].sort()
+    return [...new Set(source.map(m => getLocalDate(m.kickoff_at)))].sort()
   }, [matches, groupFilter])
 
   const filteredMatches = useMemo(() => {
@@ -124,7 +122,7 @@ export default function Predictions() {
         <strong style={{ color: 'var(--gold)' }}>{myTotal}</strong>
       </p>
 
-      {/* FILTROS (igual que antes) */}
+      {/* FILTROS */}
       <div className="card predictions-filters">
         <div>
           <label className="filter-label">Grupo</label>
@@ -211,7 +209,7 @@ export default function Predictions() {
             prediction={predictions[match.id]}
             onSave={handleSave}
             showPoints
-            editable={false}   // 🔒 BLOQUEO TOTAL
+            readOnly={true}   // 🔒 BLOQUEO TOTAL REAL
           />
         ))
       )}

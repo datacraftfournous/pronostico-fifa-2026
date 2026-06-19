@@ -10,33 +10,20 @@ export default function MatchCard({
   prediction,
   onSave,
   showPoints = false,
-  readOnly = false
+  readOnly = true
 }) {
   const [home, setHome] = useState(prediction?.home_score ?? '')
   const [away, setAway] = useState(prediction?.away_score ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  // 🔒 BLOQUEO ABSOLUTO (ya no depende de reglas externas)
-  const editable = !readOnly && !match.is_finished
+  // 🔒 BLOQUEO ABSOLUTO REAL
+  const editable = false
 
   const status = getMatchStatus(match)
 
   async function handleSave() {
-    if (!editable) return
-    if (home === '' || away === '') return
-
-    setSaving(true)
-
-    await onSave(
-      match.id,
-      parseInt(home, 10),
-      parseInt(away, 10)
-    )
-
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    return // 🔒 NO HACE NADA
   }
 
   return (
@@ -61,11 +48,8 @@ export default function MatchCard({
         <div className="score-inputs">
           <input
             type="number"
-            min="0"
-            max="20"
             value={home}
-            onChange={(e) => setHome(e.target.value)}
-            disabled={!editable}
+            disabled
             placeholder="-"
           />
 
@@ -73,11 +57,8 @@ export default function MatchCard({
 
           <input
             type="number"
-            min="0"
-            max="20"
             value={away}
-            onChange={(e) => setAway(e.target.value)}
-            disabled={!editable}
+            disabled
             placeholder="-"
           />
         </div>
@@ -96,38 +77,13 @@ export default function MatchCard({
 
       {showPoints && prediction && match.is_finished && (
         <div className="match-points">
-          Puntos obtenidos:{' '}
-          <span>{prediction.points ?? 0}</span> / 5
+          Puntos obtenidos: <span>{prediction.points ?? 0}</span> / 5
         </div>
       )}
 
-      {/* 🔒 SOLO SE MUESTRA SI ES EDITABLE */}
-      {editable && (
-        <div className="match-actions">
-          <button
-            className="btn btn-primary"
-            onClick={handleSave}
-            disabled={
-              saving ||
-              home === '' ||
-              away === ''
-            }
-          >
-            {saving
-              ? 'Guardando...'
-              : saved
-              ? '✓ Guardado'
-              : 'Guardar pronóstico'}
-          </button>
-        </div>
-      )}
-
-      {/* 🔒 MENSAJE CLARO CUANDO ESTÁ BLOQUEADO */}
-      {!editable && (
-        <div className="match-result">
-          🔒 Pronóstico bloqueado
-        </div>
-      )}
+      <div className="match-result">
+        🔒 Pronósticos deshabilitados
+      </div>
     </div>
   )
 }
