@@ -101,7 +101,7 @@ export default function DailyPrediction() {
       <h2 className="page-title">📅 Daily Prediction</h2>
 
       <p className="page-subtitle">
-        Vista tipo reporte de tus pronósticos
+        Vista tipo reporte (tabla de análisis)
       </p>
 
       {/* FILTROS */}
@@ -152,16 +152,28 @@ export default function DailyPrediction() {
       </div>
 
       {/* TABLA DATAVIZ */}
-      <div className="card table-card">
+      <div className="card">
+
         {filteredMatches.length === 0 ? (
-          <div className="empty-state">
-            <p>No hay partidos para los filtros seleccionados.</p>
+          <div style={{ padding: 20 }}>
+            No hay partidos para los filtros seleccionados.
           </div>
         ) : (
-          <div className="table">
+
+          <div style={{ width: '100%' }}>
 
             {/* HEADER */}
-            <div className="table-header">
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr 1fr 1fr',
+                padding: '10px',
+                fontSize: 12,
+                fontWeight: 600,
+                opacity: 0.6,
+                borderBottom: '1px solid #ddd'
+              }}
+            >
               <div>Partido</div>
               <div>Fecha</div>
               <div>Pronóstico</div>
@@ -173,13 +185,23 @@ export default function DailyPrediction() {
               const pred = predictions[match.id]
 
               return (
-                <div key={match.id} className="table-row">
+                <div
+                  key={match.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '2fr 1fr 1fr 1fr',
+                    padding: '10px',
+                    borderBottom: '1px solid #eee',
+                    fontSize: 13,
+                    alignItems: 'center'
+                  }}
+                >
 
-                  <div className="cell strong">
+                  <div style={{ fontWeight: 600 }}>
                     {match.home_team} vs {match.away_team}
                   </div>
 
-                  <div className="cell muted">
+                  <div style={{ opacity: 0.7, fontSize: 12 }}>
                     {new Date(match.kickoff_at).toLocaleString('es-CO', {
                       day: '2-digit',
                       month: 'short',
@@ -188,19 +210,17 @@ export default function DailyPrediction() {
                     })}
                   </div>
 
-                  <div className="cell prediction">
-                    <span>{pred?.home_score ?? '-'}</span>
-                    <span className="sep">:</span>
-                    <span>{pred?.away_score ?? '-'}</span>
+                  <div style={{ fontWeight: 600 }}>
+                    {pred?.home_score ?? '-'} : {pred?.away_score ?? '-'}
                   </div>
 
-                  <div className="cell result">
+                  <div>
                     {match.is_finished ? (
-                      <span className="done">
+                      <span style={{ fontWeight: 700 }}>
                         {match.home_score}-{match.away_score}
                       </span>
                     ) : (
-                      <span className="pending">⏳</span>
+                      <span style={{ opacity: 0.6 }}>⏳</span>
                     )}
                   </div>
 
@@ -208,7 +228,9 @@ export default function DailyPrediction() {
               )
             })}
           </div>
+
         )}
+
       </div>
     </div>
   )
