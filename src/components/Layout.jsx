@@ -28,6 +28,12 @@ export default function Layout() {
         <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
           🏆 Ranking
         </NavLink>
+        <NavLink
+  to="/daily-prediction"
+  className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+>
+  📅 Daily Prediction
+</NavLink>
 {/*
 <NavLink to="/pronosticos" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
   📝 Mis pronósticos
