@@ -1,0 +1,73 @@
+ID;Grupo;Local;Visitante;GL_REAL;GV_REAL
+1;A;M‚xico;Sud frica;2;0
+2;A;Corea del Sur;Chequia;2;1
+3;B;Canad ;Bosnia y Herzegovina;1;1
+4;D;Estados Unidos;Paraguay;4;1
+5;B;Catar;Suiza;1;1
+6;C;Brasil;Marruecos;1;1
+7;C;Hait¡;Escocia;0;1
+8;D;Australia;Turqu¡a;2;0
+9;E;Alemania;Curazao;7;1
+10;F;Pa¡ses Bajos;Jap¢n;2;2
+11;E;Costa de Marfil;Ecuador;1;0
+12;F;Suecia;T£nez;5;1
+13;H;Espa¤a;Cabo Verde;0;0
+14;G;B‚lgica;Egipto;1;1
+15;H;Arabia Saudita;Uruguay;1;1
+16;G;Ir n;Nueva Zelanda;2;2
+17;I;Francia;Senegal;3;1
+18;I;Irak;Noruega;1;4
+19;J;Argentina;Argelia;3;0
+20;J;Austria;Jordania;3;1
+21;K;Portugal;RD Congo;1;1
+22;L;Inglaterra;Croacia;4;2
+23;L;Ghana;Panam ;1;0
+24;K;Uzbekist n;Colombia;1;3
+25;A;Chequia;Sud frica;;
+26;B;Suiza;Bosnia y Herzegovina;;
+27;B;Canad ;Catar;;
+28;A;M‚xico;Corea del Sur;;
+29;D;Estados Unidos;Australia;;
+30;C;Escocia;Marruecos;;
+31;C;Brasil;Hait¡;;
+32;D;Turqu¡a;Paraguay;;
+33;F;Pa¡ses Bajos;Suecia;;
+34;E;Alemania;Costa de Marfil;;
+35;E;Ecuador;Curazao;;
+36;F;T£nez;Jap¢n;;
+37;H;Espa¤a;Arabia Saudita;;
+38;G;B‚lgica;Ir n;;
+39;H;Uruguay;Cabo Verde;;
+40;G;Nueva Zelanda;Egipto;;
+41;J;Argentina;Austria;;
+42;I;Francia;Irak;;
+43;I;Noruega;Senegal;;
+44;J;Jordania;Argelia;;
+45;K;Portugal;Uzbekist n;;
+46;L;Inglaterra;Ghana;;
+47;L;Panam ;Croacia;;
+48;K;Colombia;RD Congo;;
+49;B;Suiza;Canad ;;
+50;B;Bosnia y Herzegovina;Catar;;
+51;C;Escocia;Brasil;;
+52;C;Marruecos;Hait¡;;
+53;A;Chequia;M‚xico;;
+54;A;Sud frica;Corea del Sur;;
+55;E;Curazao;Costa de Marfil;;
+56;E;Ecuador;Alemania;;
+57;F;Jap¢n;Suecia;;
+58;F;T£nez;Pa¡ses Bajos;;
+59;D;Turqu¡a;Estados Unidos;;
+60;D;Paraguay;Australia;;
+61;I;Noruega;Francia;;
+62;I;Senegal;Irak;;
+63;H;Cabo Verde;Arabia Saudita;;
+64;H;Uruguay;Espa¤a;;
+65;G;Egipto;Ir n;;
+66;G;Nueva Zelanda;B‚lgica;;
+67;L;Panam ;Inglaterra;;
+68;L;Croacia;Ghana;;
+69;K;Colombia;Portugal;;
+70;K;RD Congo;Uzbekist n;;
+71;J;Argelia;Austria;;
+72;J;Jordania;Argentina;;
