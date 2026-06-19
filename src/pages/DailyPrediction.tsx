@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { getFlag } from '../lib/flags'
+import { getFlagUrl } from '../lib/flags'
+
+function Flag({ team }) {
+  const url = getFlagUrl(team)
+  if (!url) return null
+  return <img src={url} alt={team} title={team} className="pivot-flag-img" />
+}
 
 export default function DailyPrediction() {
   const [matches, setMatches] = useState([])
@@ -90,7 +96,7 @@ export default function DailyPrediction() {
   }
 
   const colWidth = columnsMatches.length > 0
-    ? `${Math.max(70 / columnsMatches.length, 6)}%`
+    ? `${Math.max(70 / columnsMatches.length, 8)}%`
     : 'auto'
 
   return (
@@ -142,6 +148,13 @@ export default function DailyPrediction() {
         </div>
       </div>
 
+      {/* LEYENDA */}
+      <div className="pivot-legend">
+        <span><strong>Pron</strong> = Pronóstico</span>
+        <span><strong>Real</strong> = Resultado real</span>
+        <span><strong>Pts</strong> = Puntos obtenidos</span>
+      </div>
+
       {/* TABLA PIVOT */}
       <div className="card" style={{ padding: '0.75rem', overflowX: 'hidden' }}>
         {columnsMatches.length === 0 ? (
@@ -149,25 +162,28 @@ export default function DailyPrediction() {
         ) : (
           <table className="pivot-table">
             <colgroup>
-              <col style={{ width: '12%' }} />
+              <col style={{ width: '14%' }} />
               {columnsMatches.map(m => <col key={m.id} style={{ width: colWidth }} />)}
             </colgroup>
             <thead>
               <tr>
-                <th className="pivot-sticky">Jugador</th>
+                <th className="pivot-sticky" rowSpan={2}>Jugador</th>
                 {columnsMatches.map(m => (
                   <th key={m.id} title={`${m.home_team} vs ${m.away_team}`}>
                     <div className="pivot-match-header">
-                      <div className="pivot-team-block">
-                        <span className="pivot-flag">{getFlag(m.home_team)}</span>
-                        <span className="pivot-team-name">{m.home_team}</span>
-                      </div>
+                      <Flag team={m.home_team} />
                       <span className="pivot-vs">vs</span>
-                      <div className="pivot-team-block">
-                        <span className="pivot-flag">{getFlag(m.away_team)}</span>
-                        <span className="pivot-team-name">{m.away_team}</span>
-                      </div>
+                      <Flag team={m.away_team} />
                     </div>
+                  </th>
+                ))}
+              </tr>
+              <tr>
+                {columnsMatches.map(m => (
+                  <th key={`sub-${m.id}`} className="pivot-subheader">
+                    <span>Pron</span>
+                    <span>Real</span>
+                    <span>Pts</span>
                   </th>
                 ))}
               </tr>
@@ -185,15 +201,12 @@ export default function DailyPrediction() {
                     return (
                       <td key={m.id} className="pivot-cell">
                         <div className="pivot-cell-content">
-                          <div className="pivot-pred-real">
-                            <span className="pivot-pred">
-                              {pred ? `${pred.home_score}-${pred.away_score}` : '—'}
-                            </span>
-                            <span className="pivot-divider">|</span>
-                            <span className="pivot-real">
-                              {isFinished ? `${m.home_score}-${m.away_score}` : '⏳'}
-                            </span>
-                          </div>
+                          <span className="pivot-pred">
+                            {pred ? `${pred.home_score}-${pred.away_score}` : '—'}
+                          </span>
+                          <span className="pivot-real">
+                            {isFinished ? `${m.home_score}-${m.away_score}` : 'Pend.'}
+                          </span>
                           <span
                             className="pivot-points"
                             style={{ color: isFinished ? 'var(--gold)' : 'var(--text-muted)' }}

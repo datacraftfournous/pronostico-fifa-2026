@@ -670,6 +670,20 @@ h1, h2, h3, .title-font {
 }
 
 /* ===== TABLA PIVOT - REPORTE ===== */
+.pivot-legend {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  padding: 0 0.25rem;
+}
+
+.pivot-legend strong {
+  color: var(--gold);
+}
+
 .pivot-table {
   width: 100%;
   border-collapse: collapse;
@@ -682,7 +696,7 @@ h1, h2, h3, .title-font {
   border: none;
   border-bottom: 1px solid rgba(255, 215, 0, 0.12);
   border-right: 1px solid rgba(255, 215, 0, 0.12);
-  padding: 0.4rem 0.2rem;
+  padding: 0.35rem 0.2rem;
   text-align: center;
   vertical-align: middle;
   overflow: hidden;
@@ -695,43 +709,44 @@ h1, h2, h3, .title-font {
 
 .pivot-table thead th {
   background: var(--bg-card-hover);
-  font-size: 0.65rem;
   color: var(--text-muted);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.12);
+}
+
+.pivot-table thead tr:last-child th {
   border-bottom: 2px solid var(--gold);
 }
 
 .pivot-match-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
-  line-height: 1.1;
+  gap: 0.3rem;
 }
 
-.pivot-team-block {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+.pivot-flag-img {
+  width: 18px;
+  height: 13px;
+  object-fit: cover;
+  border-radius: 2px;
+  display: inline-block;
 }
 
-.pivot-flag {
-  font-size: 0.9rem;
-  line-height: 1;
-}
-
-.pivot-team-name {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 80px;
-}
 .pivot-vs {
   font-size: 0.55rem;
   opacity: 0.5;
+}
+
+.pivot-subheader {
+  display: table-cell;
+}
+
+.pivot-subheader > span {
+  display: inline-block;
+  width: 32%;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
 }
 
 .pivot-sticky {
@@ -753,40 +768,21 @@ h1, h2, h3, .title-font {
 
 .pivot-cell-content {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.15rem;
-  line-height: 1.1;
-}
-
-.pivot-pred-real {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  font-size: 0.68rem;
-  width: 100%;
+  justify-content: space-around;
+  gap: 0.2rem;
 }
 
 .pivot-pred {
   font-weight: 600;
   color: var(--text-muted);
-  min-width: 1.6rem;
-  text-align: center;
-}
-
-.pivot-divider {
-  color: var(--gold);
-  font-weight: 700;
-  opacity: 0.7;
+  font-size: 0.68rem;
 }
 
 .pivot-real {
   font-weight: 700;
   color: var(--text);
-  min-width: 1.6rem;
-  text-align: center;
+  font-size: 0.68rem;
 }
 
 .pivot-points {
