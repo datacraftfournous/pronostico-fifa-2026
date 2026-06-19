@@ -16,6 +16,10 @@ export default function Layout() {
             <h1>POLLA FIFA 2026</h1>
             <span>Pronósticos entre amigos</span>
           </div>
+          <div>
+            <h1>POLLA FIFA 2026</h1>
+            <span>Developed by  Jhonny Alberto Anaya Mattos</span>
+          </div>
         </div>
 
         <div className="header-user">
