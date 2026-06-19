@@ -14,7 +14,7 @@ export default function Layout() {
           <span className="logo-icon">⚽</span>
           <div>
             <h1>POLLA FIFA 2026</h1>
-            <span>Pronósticos entre amigos</span>
+            <span>Pronósticos Familia y amigos</span>
           </div>
           <div>
             <h1>POLLA FIFA 2026</h1>
