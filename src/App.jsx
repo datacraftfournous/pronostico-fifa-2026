@@ -15,7 +15,6 @@ function ProtectedRoute({ children, adminOnly = false }) {
     return (
       <div className="loading-screen">
         <div className="loader" />
-        <p>Cargando...</p>
       </div>
     )
   }
@@ -33,7 +32,6 @@ export default function App() {
     return (
       <div className="loading-screen">
         <div className="loader" />
-        <p>Cargando...</p>
       </div>
     )
   }
@@ -45,8 +43,6 @@ export default function App() {
         element={user ? <Navigate to="/" replace /> : <Login />}
       />
 
-      <Route path="/pronosticos-publicos" element={<PublicPredictions />} />
-
       <Route
         path="/"
         element={
@@ -56,11 +52,9 @@ export default function App() {
         }
       >
         <Route index element={<Ranking />} />
-
         <Route path="daily-prediction" element={<DailyPrediction />} />
-
+        <Route path="pronosticos" element={<Predictions />} />
         <Route path="reglas" element={<Rules />} />
-
         <Route
           path="admin"
           element={
