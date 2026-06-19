@@ -56,8 +56,11 @@ export default function App() {
         }
       >
         <Route index element={<Ranking />} />
-        <Route path="pronosticos" element={<Predictions />} />
+
+        <Route path="daily-prediction" element={<DailyPrediction />} />
+
         <Route path="reglas" element={<Rules />} />
+
         <Route
           path="admin"
           element={
