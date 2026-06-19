@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import MatchCard from '../components/MatchCard'
 
 export default function DailyPrediction() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
 
   const [matches, setMatches] = useState([])
   const [predictions, setPredictions] = useState({})
@@ -20,12 +20,11 @@ export default function DailyPrediction() {
   }
 
   useEffect(() => {
+    if (!user) return
     loadData()
   }, [user])
 
   async function loadData() {
-    if (!user) return
-
     setLoading(true)
 
     const [{ data: matchData }, { data: predData }] = await Promise.all([
@@ -42,12 +41,12 @@ export default function DailyPrediction() {
 
     setMatches(matchData || [])
 
-    const predMap = {}
+    const map = {}
     for (const p of predData || []) {
-      predMap[p.match_id] = p
+      map[p.match_id] = p
     }
 
-    setPredictions(predMap)
+    setPredictions(map)
 
     setLoading(false)
   }
@@ -86,9 +85,9 @@ export default function DailyPrediction() {
     return result
   }, [matches, groupFilter, dateFilter])
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
-      <div className="loading-screen" style={{ minHeight: '200px' }}>
+      <div className="loading-screen">
         <div className="loader" />
       </div>
     )
@@ -102,7 +101,6 @@ export default function DailyPrediction() {
         Consulta tus pronósticos por fecha y grupo
       </p>
 
-      {/* FILTROS (MISMO ESTILO QUE TU APP) */}
       <div className="card predictions-filters">
         <div>
           <label className="filter-label">Grupo</label>
@@ -158,7 +156,6 @@ export default function DailyPrediction() {
         </div>
       </div>
 
-      {/* MATCHES */}
       {filteredMatches.length === 0 ? (
         <div className="empty-state card">
           <div className="icon">📅</div>
