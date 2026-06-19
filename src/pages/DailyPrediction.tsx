@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import MatchCard from '../components/MatchCard'
 
 export default function DailyPrediction() {
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
 
   const [matches, setMatches] = useState([])
   const [predictions, setPredictions] = useState({})
@@ -20,11 +19,12 @@ export default function DailyPrediction() {
   }
 
   useEffect(() => {
-    if (!user) return
     loadData()
   }, [user])
 
   async function loadData() {
+    if (!user) return
+
     setLoading(true)
 
     const [{ data: matchData }, { data: predData }] = await Promise.all([
@@ -85,7 +85,7 @@ export default function DailyPrediction() {
     return result
   }, [matches, groupFilter, dateFilter])
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="loading-screen">
         <div className="loader" />
@@ -101,13 +101,13 @@ export default function DailyPrediction() {
         Consulta tus pronósticos por fecha y grupo
       </p>
 
+      {/* FILTROS */}
       <div className="card predictions-filters">
         <div>
           <label className="filter-label">Grupo</label>
 
           <div className="group-filter">
             <button
-              type="button"
               className={groupFilter === 'todos' ? 'group-btn active' : 'group-btn'}
               onClick={() => setGroupFilter('todos')}
             >
@@ -117,7 +117,6 @@ export default function DailyPrediction() {
             {'ABCDEFGHIJKL'.split('').map(group => (
               <button
                 key={group}
-                type="button"
                 className={groupFilter === group ? 'group-btn active' : 'group-btn'}
                 onClick={() => setGroupFilter(group)}
               >
@@ -132,7 +131,6 @@ export default function DailyPrediction() {
 
           <div className="date-filter">
             <button
-              type="button"
               className={dateFilter === 'todas' ? 'date-btn active' : 'date-btn'}
               onClick={() => setDateFilter('todas')}
             >
@@ -142,7 +140,6 @@ export default function DailyPrediction() {
             {availableDates.map(date => (
               <button
                 key={date}
-                type="button"
                 className={dateFilter === date ? 'date-btn active' : 'date-btn'}
                 onClick={() => setDateFilter(date)}
               >
@@ -156,22 +153,71 @@ export default function DailyPrediction() {
         </div>
       </div>
 
-      {filteredMatches.length === 0 ? (
-        <div className="empty-state card">
-          <div className="icon">📅</div>
-          <p>No hay partidos para los filtros seleccionados.</p>
+      {/* TABLA COMPACTA */}
+      <div className="card" style={{ padding: 10 }}>
+        <div className="compact-table">
+
+          {filteredMatches.length === 0 ? (
+            <div className="empty-state">
+              <p>No hay partidos para los filtros seleccionados.</p>
+            </div>
+          ) : (
+            filteredMatches.map(match => {
+              const pred = predictions[match.id]
+
+              return (
+                <div key={match.id} className="compact-row">
+
+                  <div className="compact-left">
+                    <div className="stage">{match.stage}</div>
+
+                    <div className="teams">
+                      {match.home_team}
+                      <span className="vs">vs</span>
+                      {match.away_team}
+                    </div>
+
+                    <div className="date">
+                      🇨🇴 {new Date(match.kickoff_at).toLocaleString('es-CO', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="compact-center">
+                    <input
+                      className="mini-input"
+                      value={pred?.home_score ?? ''}
+                      disabled
+                    />
+                    <span className="vs">:</span>
+                    <input
+                      className="mini-input"
+                      value={pred?.away_score ?? ''}
+                      disabled
+                    />
+                  </div>
+
+                  <div className="compact-right">
+                    {match.is_finished ? (
+                      <span className="result">
+                        {match.home_score}-{match.away_score}
+                      </span>
+                    ) : (
+                      <span className="pending">⏳</span>
+                    )}
+                  </div>
+
+                </div>
+              )
+            })
+          )}
+
         </div>
-      ) : (
-        filteredMatches.map(match => (
-          <MatchCard
-            key={match.id}
-            match={match}
-            prediction={predictions[match.id]}
-            showPoints={false}
-            readOnly={true}
-          />
-        ))
-      )}
+      </div>
     </div>
   )
 }
