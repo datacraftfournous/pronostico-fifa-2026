@@ -10,17 +10,24 @@ export default function Layout() {
   return (
     <div className="app-layout">
       <header className="app-header">
-        <div className="logo">
+   
+   <div className="logo">
   <span className="logo-icon">⚽</span>
   <div>
     <h1>POLLA FIFA 2026</h1>
     <span>Pronósticos Familia y amigos</span>
     <br />
-    <span style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 600 }}>
-      Developed by Jhonny Alberto Anaya Mattos  - 🦈 Tiburon Flag
+    <span style={{ 
+      fontSize: '0.65rem', 
+      color: 'var(--gold)', 
+      fontWeight: 600,
+      textShadow: '0 0 6px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.5)'
+    }}>
+      🦈 Developed by Jhonny Alberto Anaya Mattos
     </span>
   </div>
 </div>
+
 
         <div className="header-user">
           <span>
