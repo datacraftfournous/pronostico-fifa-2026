@@ -19,11 +19,11 @@ export default function Layout() {
     <br />
     <span style={{ 
       fontSize: '0.65rem', 
-      color: 'var(--gold)', 
+      color: rgba(255,255,255,0.8), 
       fontWeight: 600,
       textShadow: '0 0 6px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.5)'
     }}>
-      🦈 Developed by Jhonny Alberto Anaya Mattos
+       Developed by Jhonny Alberto Anaya Mattos - Tiburon Flag 🦈
     </span>
   </div>
 </div>
