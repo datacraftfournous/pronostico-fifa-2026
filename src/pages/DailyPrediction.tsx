@@ -39,14 +39,12 @@ export default function DailyPrediction() {
       setPredictions(predData || [])
       setProfiles(profileData || [])
 
-      // Fecha por defecto: hoy en Colombia, o la fecha más cercana con partidos
       const today = todayInColombia()
       const dates = [...new Set((matchData || []).map(m => getLocalDate(m.kickoff_at)))].sort()
 
       if (dates.includes(today)) {
         setDateFilter(today)
       } else if (dates.length > 0) {
-        // Si hoy no hay partidos, busca la fecha más cercana (futura primero)
         const futureDate = dates.find(d => d >= today)
         setDateFilter(futureDate || dates[dates.length - 1])
       }
@@ -59,49 +57,29 @@ export default function DailyPrediction() {
     return [...new Set(matches.map(m => getLocalDate(m.kickoff_at)))].sort()
   }, [matches])
 
-  // Partidos del día seleccionado (para el selector de hora/partido)
   const matchesOfDay = useMemo(() => {
     return matches
       .filter(m => getLocalDate(m.kickoff_at) === dateFilter)
       .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
   }, [matches, dateFilter])
 
-  // Partidos finales a mostrar (según el filtro de partido/hora)
-  const filteredMatches = useMemo(() => {
+  const columnsMatches = useMemo(() => {
     if (matchFilter === 'all') return matchesOfDay
     return matchesOfDay.filter(m => String(m.id) === String(matchFilter))
   }, [matchesOfDay, matchFilter])
 
-  // Resetear el filtro de partido cuando cambia la fecha
   useEffect(() => {
     setMatchFilter('all')
   }, [dateFilter])
 
-  // Construir filas: una por cada combinación jugador x partido
-  const rows = useMemo(() => {
-    const result = []
-
-    for (const match of filteredMatches) {
-      for (const profile of profiles) {
-        const pred = predictions.find(
-          p => p.match_id === match.id && p.user_id === profile.id
-        )
-
-        result.push({
-          key: `${match.id}-${profile.id}`,
-          username: profile.display_name || profile.username,
-          matchLabel: `${match.home_team} vs ${match.away_team}`,
-          kickoff: match.kickoff_at,
-          isFinished: match.is_finished,
-          realScore: match.is_finished ? `${match.home_score}-${match.away_score}` : null,
-          predScore: pred ? `${pred.home_score}-${pred.away_score}` : '—',
-          points: pred?.points ?? (match.is_finished ? 0 : '—'),
-        })
-      }
+  // Mapa rápido: predicciones por match_id + user_id
+  const predMap = useMemo(() => {
+    const map = {}
+    for (const p of predictions) {
+      map[`${p.match_id}-${p.user_id}`] = p
     }
-
-    return result
-  }, [filteredMatches, profiles, predictions])
+    return map
+  }, [predictions])
 
   if (loading) {
     return (
@@ -111,10 +89,14 @@ export default function DailyPrediction() {
     )
   }
 
+  const colWidth = columnsMatches.length > 0
+    ? `${Math.max(70 / columnsMatches.length, 6)}%`
+    : 'auto'
+
   return (
     <div>
       <h2 className="page-title">📊 Reporte de pronósticos</h2>
-      <p className="page-subtitle">Resultados y puntos de todos los jugadores</p>
+      <p className="page-subtitle">Pronóstico, resultado real y puntos por jugador</p>
 
       {/* FILTROS */}
       <div className="card predictions-filters">
@@ -160,46 +142,63 @@ export default function DailyPrediction() {
         </div>
       </div>
 
-      {/* TABLA */}
-      <div className="card">
-        {rows.length === 0 ? (
-          <div style={{ padding: 20 }}>
-            No hay datos para los filtros seleccionados.
-          </div>
+      {/* TABLA PIVOT */}
+      <div className="card" style={{ padding: '0.75rem', overflowX: 'hidden' }}>
+        {columnsMatches.length === 0 ? (
+          <div style={{ padding: 20 }}>No hay partidos para los filtros seleccionados.</div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="ranking-table">
-              <thead>
-                <tr>
-                  <th>Jugador</th>
-                  <th>Partido</th>
-                  <th>Resultado real</th>
-                  <th>Pronóstico</th>
-                  <th>Puntos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(row => (
-                  <tr key={row.key}>
-                    <td>{row.username}</td>
-                    <td>{row.matchLabel}</td>
-                    <td>
-                      {row.isFinished
-                        ? <strong>{row.realScore}</strong>
-                        : <span style={{ opacity: 0.6 }}>⏳ Pendiente</span>
-                      }
-                    </td>
-                    <td>{row.predScore}</td>
-                    <td>
-                      <strong style={{ color: row.isFinished ? 'var(--gold)' : 'var(--text-muted)' }}>
-                        {row.points}
-                      </strong>
-                    </td>
-                  </tr>
+          <table className="pivot-table">
+            <colgroup>
+              <col style={{ width: '12%' }} />
+              {columnsMatches.map(m => <col key={m.id} style={{ width: colWidth }} />)}
+            </colgroup>
+            <thead>
+              <tr>
+                <th className="pivot-sticky">Jugador</th>
+                {columnsMatches.map(m => (
+                  <th key={m.id} title={`${m.home_team} vs ${m.away_team}`}>
+                    <div className="pivot-match-header">
+                      <span className="pivot-team">{m.home_team.slice(0, 3).toUpperCase()}</span>
+                      <span className="pivot-vs">vs</span>
+                      <span className="pivot-team">{m.away_team.slice(0, 3).toUpperCase()}</span>
+                    </div>
+                  </th>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </tr>
+            </thead>
+            <tbody>
+              {profiles.map(profile => (
+                <tr key={profile.id}>
+                  <td className="pivot-sticky pivot-player">
+                    {profile.display_name || profile.username}
+                  </td>
+                  {columnsMatches.map(m => {
+                    const pred = predMap[`${m.id}-${profile.id}`]
+                    const isFinished = m.is_finished
+
+                    return (
+                      <td key={m.id} className="pivot-cell">
+                        <div className="pivot-cell-content">
+                          <span className="pivot-pred">
+                            {pred ? `${pred.home_score}-${pred.away_score}` : '—'}
+                          </span>
+                          <span className="pivot-real">
+                            {isFinished ? `${m.home_score}-${m.away_score}` : '⏳'}
+                          </span>
+                          <span
+                            className="pivot-points"
+                            style={{ color: isFinished ? 'var(--gold)' : 'var(--text-muted)' }}
+                          >
+                            {isFinished ? (pred?.points ?? 0) : '—'}
+                          </span>
+                        </div>
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>
