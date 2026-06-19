@@ -6,6 +6,7 @@ import Ranking from './pages/Ranking'
 import Predictions from './pages/Predictions'
 import Admin from './pages/Admin'
 import Rules from './pages/Rules'
+import PublicPredictions from './pages/PublicPredictions' // 👈 NUEVO
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, profile, loading, isAdmin } = useAuth()
@@ -39,10 +40,17 @@ export default function App() {
 
   return (
     <Routes>
+
+      {/* LOGIN */}
       <Route
         path="/login"
         element={user ? <Navigate to="/" replace /> : <Login />}
       />
+
+      {/* 🔥 RUTA PÚBLICA (SIN LOGIN) */}
+      <Route path="/pronosticos-publicos" element={<PublicPredictions />} />
+
+      {/* 🔐 RUTAS PRIVADAS */}
       <Route
         path="/"
         element={
@@ -54,6 +62,7 @@ export default function App() {
         <Route index element={<Ranking />} />
         <Route path="pronosticos" element={<Predictions />} />
         <Route path="reglas" element={<Rules />} />
+
         <Route
           path="admin"
           element={
@@ -63,6 +72,8 @@ export default function App() {
           }
         />
       </Route>
+
+      {/* REDIRECCIÓN */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
