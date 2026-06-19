@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  canEditPrediction,
   formatKickoffColombia,
   getMatchStatus,
   statusLabel
@@ -18,15 +17,23 @@ export default function MatchCard({
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  const editable = !readOnly && canEditPrediction(match)
+  // 🔒 BLOQUEO ABSOLUTO (ya no depende de reglas externas)
+  const editable = !readOnly && !match.is_finished
+
   const status = getMatchStatus(match)
 
   async function handleSave() {
-    if (readOnly) return
+    if (!editable) return
     if (home === '' || away === '') return
 
     setSaving(true)
-    await onSave(match.id, parseInt(home, 10), parseInt(away, 10))
+
+    await onSave(
+      match.id,
+      parseInt(home, 10),
+      parseInt(away, 10)
+    )
+
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -36,9 +43,15 @@ export default function MatchCard({
     <div className="card match-card">
       <div className="match-header">
         <span className="match-stage">{match.stage}</span>
+
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <span className="match-date">🇨🇴 {formatKickoffColombia(match)}</span>
-          <span className={`badge badge-${status}`}>{statusLabel(status)}</span>
+          <span className="match-date">
+            🇨🇴 {formatKickoffColombia(match)}
+          </span>
+
+          <span className={`badge badge-${status}`}>
+            {statusLabel(status)}
+          </span>
         </div>
       </div>
 
@@ -55,7 +68,9 @@ export default function MatchCard({
             disabled={!editable}
             placeholder="-"
           />
+
           <span className="score-separator">:</span>
+
           <input
             type="number"
             min="0"
@@ -72,30 +87,46 @@ export default function MatchCard({
 
       {match.is_finished && (
         <div className="match-result">
-          Resultado real: <strong>{match.home_score} - {match.away_score}</strong>
+          Resultado real:{' '}
+          <strong>
+            {match.home_score} - {match.away_score}
+          </strong>
         </div>
       )}
 
       {showPoints && prediction && match.is_finished && (
         <div className="match-points">
-          Puntos obtenidos: <span>{prediction.points ?? 0}</span> / 5
+          Puntos obtenidos:{' '}
+          <span>{prediction.points ?? 0}</span> / 5
         </div>
       )}
 
+      {/* 🔒 SOLO SE MUESTRA SI ES EDITABLE */}
       {editable && (
         <div className="match-actions">
           <button
             className="btn btn-primary"
             onClick={handleSave}
-            disabled={saving || home === '' || away === ''}
+            disabled={
+              saving ||
+              home === '' ||
+              away === ''
+            }
           >
-            {saving ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar pronóstico'}
+            {saving
+              ? 'Guardando...'
+              : saved
+              ? '✓ Guardado'
+              : 'Guardar pronóstico'}
           </button>
         </div>
       )}
 
-      {!editable && !match.is_finished && (
-        <div className="match-result">🔒 Partido en juego — no se puede editar</div>
+      {/* 🔒 MENSAJE CLARO CUANDO ESTÁ BLOQUEADO */}
+      {!editable && (
+        <div className="match-result">
+          🔒 Pronóstico bloqueado
+        </div>
       )}
     </div>
   )
