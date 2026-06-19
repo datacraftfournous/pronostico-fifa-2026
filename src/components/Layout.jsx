@@ -28,10 +28,11 @@ export default function Layout() {
         <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
           🏆 Ranking
         </NavLink>
-        <NavLink to="/pronosticos" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
-          📝 Mis pronósticos
-        </NavLink>
-        <NavLink to="/reglas" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+{/*
+<NavLink to="/pronosticos" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+  📝 Mis pronósticos
+</NavLink>
+*/}        <NavLink to="/reglas" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
           📋 Reglas
         </NavLink>
         {isAdmin && (
