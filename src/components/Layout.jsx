@@ -4,6 +4,9 @@ import { useAuth } from '../context/AuthContext'
 export default function Layout() {
   const { profile, isAdmin, signOut } = useAuth()
 
+  const linkClass = ({ isActive }) =>
+    `nav-link${isActive ? ' active' : ''}`
+
   return (
     <div className="app-layout">
       <header className="app-header">
@@ -26,33 +29,20 @@ export default function Layout() {
       </header>
 
       <nav className="app-nav">
-        <NavLink
-          to="/"
-          end
-          className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-        >
+        <NavLink to="/" end className={linkClass}>
           🏆 Ranking
         </NavLink>
 
-        <NavLink
-          to="/daily-prediction"
-          className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-        >
+        <NavLink to="/daily-prediction" end className={linkClass}>
           📅 Daily Prediction
         </NavLink>
 
-        <NavLink
-          to="/reglas"
-          className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-        >
+        <NavLink to="/reglas" className={linkClass}>
           📋 Reglas
         </NavLink>
 
         {isAdmin && (
-          <NavLink
-            to="/admin"
-            className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-          >
+          <NavLink to="/admin" className={linkClass}>
             ⚙️ Admin
           </NavLink>
         )}
