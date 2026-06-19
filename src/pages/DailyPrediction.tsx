@@ -1,34 +1,91 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { useAuth } from './context/AuthContext'
-import Layout from './components/Layout'
-import Login from './pages/Login'
-import Ranking from './pages/Ranking'
-import Predictions from './pages/Predictions'
-import Admin from './pages/Admin'
-import Rules from './pages/Rules'
-import DailyPrediction from './pages/DailyPrediction'
+import { useEffect, useMemo, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import MatchCard from '../components/MatchCard'
 
-function ProtectedRoute({ children, adminOnly = false }) {
-  const { user, profile, loading, isAdmin } = useAuth()
+export default function DailyPrediction() {
+  const { user, loading: authLoading } = useAuth()
 
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loader" />
-      </div>
-    )
+  const [matches, setMatches] = useState([])
+  const [predictions, setPredictions] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  const [groupFilter, setGroupFilter] = useState('todos')
+  const [dateFilter, setDateFilter] = useState('todas')
+
+  function getLocalDate(dateString) {
+    return new Date(dateString).toLocaleDateString('en-CA', {
+      timeZone: 'America/Bogota',
+    })
   }
 
-  if (!user || !profile) return <Navigate to="/login" replace />
-  if (adminOnly && !isAdmin) return <Navigate to="/" replace />
+  useEffect(() => {
+    if (!user) return
+    loadData()
+  }, [user])
 
-  return children
-}
+  async function loadData() {
+    setLoading(true)
 
-export default function App() {
-  const { user, loading } = useAuth()
+    const [{ data: matchData }, { data: predData }] = await Promise.all([
+      supabase
+        .from('matches')
+        .select('*')
+        .order('kickoff_at', { ascending: true }),
 
-  if (loading) {
+      supabase
+        .from('predictions')
+        .select('*')
+        .eq('user_id', user.id),
+    ])
+
+    setMatches(matchData || [])
+
+    const map = {}
+    for (const p of predData || []) {
+      map[p.match_id] = p
+    }
+
+    setPredictions(map)
+
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    setDateFilter('todas')
+  }, [groupFilter])
+
+  const availableDates = useMemo(() => {
+    let source = matches
+
+    if (groupFilter !== 'todos') {
+      source = source.filter(m => m.group_code === groupFilter)
+    }
+
+    return [...new Set(source.map(m => getLocalDate(m.kickoff_at)))].sort()
+  }, [matches, groupFilter])
+
+  const filteredMatches = useMemo(() => {
+    let result = [...matches]
+
+    if (groupFilter !== 'todos') {
+      result = result.filter(m => m.group_code === groupFilter)
+    }
+
+    if (dateFilter !== 'todas') {
+      result = result.filter(
+        m => getLocalDate(m.kickoff_at) === dateFilter
+      )
+    }
+
+    result.sort(
+      (a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at)
+    )
+
+    return result
+  }, [matches, groupFilter, dateFilter])
+
+  if (authLoading || loading) {
     return (
       <div className="loading-screen">
         <div className="loader" />
@@ -37,39 +94,84 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route
-        path="/login"
-        element={user ? <Navigate to="/" replace /> : <Login />}
-      />
+    <div>
+      <h2 className="page-title">📅 Daily Prediction</h2>
 
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Ranking />} />
+      <p className="page-subtitle">
+        Consulta tus pronósticos por fecha y grupo
+      </p>
 
-        <Route path="daily-prediction" element={<DailyPrediction />} />
+      <div className="card predictions-filters">
+        <div>
+          <label className="filter-label">Grupo</label>
 
-        <Route path="pronosticos" element={<Predictions />} />
+          <div className="group-filter">
+            <button
+              type="button"
+              className={groupFilter === 'todos' ? 'group-btn active' : 'group-btn'}
+              onClick={() => setGroupFilter('todos')}
+            >
+              Todos
+            </button>
 
-        <Route path="reglas" element={<Rules />} />
+            {'ABCDEFGHIJKL'.split('').map(group => (
+              <button
+                key={group}
+                type="button"
+                className={groupFilter === group ? 'group-btn active' : 'group-btn'}
+                onClick={() => setGroupFilter(group)}
+              >
+                {group}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        <Route
-          path="admin"
-          element={
-            <ProtectedRoute adminOnly>
-              <Admin />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
+        <div>
+          <label className="filter-label">Fecha</label>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+          <div className="date-filter">
+            <button
+              type="button"
+              className={dateFilter === 'todas' ? 'date-btn active' : 'date-btn'}
+              onClick={() => setDateFilter('todas')}
+            >
+              Todas
+            </button>
+
+            {availableDates.map(date => (
+              <button
+                key={date}
+                type="button"
+                className={dateFilter === date ? 'date-btn active' : 'date-btn'}
+                onClick={() => setDateFilter(date)}
+              >
+                {new Date(date + 'T00:00:00').toLocaleDateString('es-CO', {
+                  day: '2-digit',
+                  month: 'short',
+                })}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {filteredMatches.length === 0 ? (
+        <div className="empty-state card">
+          <div className="icon">📅</div>
+          <p>No hay partidos para los filtros seleccionados.</p>
+        </div>
+      ) : (
+        filteredMatches.map(match => (
+          <MatchCard
+            key={match.id}
+            match={match}
+            prediction={predictions[match.id]}
+            showPoints={false}
+            readOnly={true}
+          />
+        ))
+      )}
+    </div>
   )
 }
