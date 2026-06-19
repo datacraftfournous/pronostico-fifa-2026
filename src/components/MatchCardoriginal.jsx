@@ -1,30 +1,17 @@
 import { useState } from 'react'
-import {
-  canEditPrediction,
-  formatKickoffColombia,
-  getMatchStatus,
-  statusLabel
-} from '../lib/scoring'
+import { canEditPrediction, formatKickoffColombia, getMatchStatus, statusLabel } from '../lib/scoring'
 
-export default function MatchCard({
-  match,
-  prediction,
-  onSave,
-  showPoints = false,
-  readOnly = false
-}) {
+export default function MatchCard({ match, prediction, onSave, showPoints = false }) {
   const [home, setHome] = useState(prediction?.home_score ?? '')
   const [away, setAway] = useState(prediction?.away_score ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  const editable = !readOnly && canEditPrediction(match)
+  const editable = canEditPrediction(match)
   const status = getMatchStatus(match)
 
   async function handleSave() {
-    if (readOnly) return
     if (home === '' || away === '') return
-
     setSaving(true)
     await onSave(match.id, parseInt(home, 10), parseInt(away, 10))
     setSaving(false)
@@ -37,7 +24,7 @@ export default function MatchCard({
       <div className="match-header">
         <span className="match-stage">{match.stage}</span>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <span className="match-date">🇨🇴 {formatKickoffColombia(match)}</span>
+         <span className="match-date">🇨🇴 {formatKickoffColombia(match)}</span>
           <span className={`badge badge-${status}`}>{statusLabel(status)}</span>
         </div>
       </div>
