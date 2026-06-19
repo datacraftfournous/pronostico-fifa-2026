@@ -6,8 +6,8 @@ import Ranking from './pages/Ranking'
 import Predictions from './pages/Predictions'
 import Admin from './pages/Admin'
 import Rules from './pages/Rules'
-import DailyPrediction from './pages/DailyPrediction.tsx'Ctrl + C
-npm run dev
+import DailyPrediction from './pages/DailyPrediction'
+
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, profile, loading, isAdmin } = useAuth()
