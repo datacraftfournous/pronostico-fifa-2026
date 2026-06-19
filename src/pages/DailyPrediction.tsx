@@ -33,24 +33,17 @@ export default function DailyPrediction() {
     setLoading(true)
 
     try {
-      const [{ data: matchData, error: matchError }, { data: predData, error: predError }] =
-        await Promise.all([
-          supabase
-            .from('matches')
-            .select('*')
-            .order('kickoff_at', { ascending: true }),
+      const [{ data: matchData }, { data: predData }] = await Promise.all([
+        supabase
+          .from('matches')
+          .select('*')
+          .order('kickoff_at', { ascending: true }),
 
-          supabase
-            .from('predictions')
-            .select('*')
-            .eq('user_id', user.id),
-        ])
-
-      if (matchError || predError) {
-        console.error(matchError || predError)
-        setLoading(false)
-        return
-      }
+        supabase
+          .from('predictions')
+          .select('*')
+          .eq('user_id', user.id),
+      ])
 
       setMatches(matchData || [])
 
@@ -108,7 +101,7 @@ export default function DailyPrediction() {
       <h2 className="page-title">📅 Daily Prediction</h2>
 
       <p className="page-subtitle">
-        Consulta tus pronósticos por fecha y grupo
+        Vista tipo reporte de tus pronósticos
       </p>
 
       {/* FILTROS */}
@@ -158,24 +151,35 @@ export default function DailyPrediction() {
         </div>
       </div>
 
-      {/* LISTA */}
-      <div className="card compact-wrapper">
+      {/* TABLA DATAVIZ */}
+      <div className="card table-card">
         {filteredMatches.length === 0 ? (
           <div className="empty-state">
             <p>No hay partidos para los filtros seleccionados.</p>
           </div>
         ) : (
-          filteredMatches.map(match => {
-            const pred = predictions[match.id]
+          <div className="table">
 
-            return (
-              <div key={match.id} className="mini-row">
-                <div className="mini-left">
-                  <div className="mini-teams">
-                    {match.home_team} <span>vs</span> {match.away_team}
+            {/* HEADER */}
+            <div className="table-header">
+              <div>Partido</div>
+              <div>Fecha</div>
+              <div>Pronóstico</div>
+              <div>Resultado</div>
+            </div>
+
+            {/* ROWS */}
+            {filteredMatches.map(match => {
+              const pred = predictions[match.id]
+
+              return (
+                <div key={match.id} className="table-row">
+
+                  <div className="cell strong">
+                    {match.home_team} vs {match.away_team}
                   </div>
 
-                  <div className="mini-date">
+                  <div className="cell muted">
                     {new Date(match.kickoff_at).toLocaleString('es-CO', {
                       day: '2-digit',
                       month: 'short',
@@ -183,26 +187,27 @@ export default function DailyPrediction() {
                       minute: '2-digit',
                     })}
                   </div>
-                </div>
 
-                <div className="mini-center">
-                  <input value={pred?.home_score ?? ''} disabled />
-                  <span>:</span>
-                  <input value={pred?.away_score ?? ''} disabled />
-                </div>
+                  <div className="cell prediction">
+                    <span>{pred?.home_score ?? '-'}</span>
+                    <span className="sep">:</span>
+                    <span>{pred?.away_score ?? '-'}</span>
+                  </div>
 
-                <div className="mini-right">
-                  {match.is_finished ? (
-                    <span className="done">
-                      {match.home_score}-{match.away_score}
-                    </span>
-                  ) : (
-                    <span className="pending">⏳</span>
-                  )}
+                  <div className="cell result">
+                    {match.is_finished ? (
+                      <span className="done">
+                        {match.home_score}-{match.away_score}
+                      </span>
+                    ) : (
+                      <span className="pending">⏳</span>
+                    )}
+                  </div>
+
                 </div>
-              </div>
-            )
-          })
+              )
+            })}
+          </div>
         )}
       </div>
     </div>
