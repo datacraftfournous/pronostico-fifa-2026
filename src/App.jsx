@@ -7,7 +7,7 @@ import Predictions from './pages/Predictions'
 import Admin from './pages/Admin'
 import Rules from './pages/Rules'
 import DailyPrediction from './pages/DailyPrediction'
-
+import Analytics from './pages/Analytics'
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, profile, loading, isAdmin } = useAuth()
@@ -54,6 +54,7 @@ export default function App() {
       >
         <Route index element={<Ranking />} />
         <Route path="daily-prediction" element={<DailyPrediction />} />
+        <Route path="analisis" element={<Analytics />} />
         <Route path="pronosticos" element={<Predictions />} />
         <Route path="reglas" element={<Rules />} />
         <Route

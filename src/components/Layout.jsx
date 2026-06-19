@@ -37,6 +37,10 @@ export default function Layout() {
           📅 Daily Prediction
         </NavLink>
 
+        <NavLink to="/analisis" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+  📈    Análisis
+        </NavLink>
+
         <NavLink to="/reglas" className={linkClass}>
           📋 Reglas
         </NavLink>
