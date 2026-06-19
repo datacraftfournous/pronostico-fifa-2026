@@ -604,3 +604,67 @@ h1, h2, h3, .title-font {
   border-color: var(--gold);
   color: var(--gold);
 }
+
+.date-select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  background: #111;
+  color: white;
+  border: 1px solid #333;
+}
+
+.compact-wrapper {
+  padding: 10px;
+}
+
+.mini-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid #222;
+  font-size: 12px;
+}
+
+.mini-left {
+  flex: 2;
+}
+
+.mini-teams {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mini-date {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.mini-center {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mini-center input {
+  width: 24px;
+  text-align: center;
+  font-size: 12px;
+  padding: 2px;
+}
+
+.mini-right {
+  width: 60px;
+  text-align: right;
+}
+
+.done {
+  color: #4ade80;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.pending {
+  opacity: 0.5;
+}

@@ -19,36 +19,50 @@ export default function DailyPrediction() {
   }
 
   useEffect(() => {
+    if (!user) {
+      setMatches([])
+      setPredictions({})
+      setLoading(false)
+      return
+    }
+
     loadData()
   }, [user])
 
   async function loadData() {
-    if (!user) return
-
     setLoading(true)
 
-    const [{ data: matchData }, { data: predData }] = await Promise.all([
-      supabase
-        .from('matches')
-        .select('*')
-        .order('kickoff_at', { ascending: true }),
+    try {
+      const [{ data: matchData, error: matchError }, { data: predData, error: predError }] =
+        await Promise.all([
+          supabase
+            .from('matches')
+            .select('*')
+            .order('kickoff_at', { ascending: true }),
 
-      supabase
-        .from('predictions')
-        .select('*')
-        .eq('user_id', user.id),
-    ])
+          supabase
+            .from('predictions')
+            .select('*')
+            .eq('user_id', user.id),
+        ])
 
-    setMatches(matchData || [])
+      if (matchError || predError) {
+        console.error(matchError || predError)
+        setLoading(false)
+        return
+      }
 
-    const map = {}
-    for (const p of predData || []) {
-      map[p.match_id] = p
+      setMatches(matchData || [])
+
+      const map = {}
+      for (const p of predData || []) {
+        map[p.match_id] = p
+      }
+
+      setPredictions(map)
+    } finally {
+      setLoading(false)
     }
-
-    setPredictions(map)
-
-    setLoading(false)
   }
 
   useEffect(() => {
@@ -73,16 +87,12 @@ export default function DailyPrediction() {
     }
 
     if (dateFilter !== 'todas') {
-      result = result.filter(
-        m => getLocalDate(m.kickoff_at) === dateFilter
-      )
+      result = result.filter(m => getLocalDate(m.kickoff_at) === dateFilter)
     }
 
-    result.sort(
+    return result.sort(
       (a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at)
     )
-
-    return result
   }, [matches, groupFilter, dateFilter])
 
   if (loading) {
@@ -129,94 +139,71 @@ export default function DailyPrediction() {
         <div>
           <label className="filter-label">Fecha</label>
 
-          <div className="date-filter">
-            <button
-              className={dateFilter === 'todas' ? 'date-btn active' : 'date-btn'}
-              onClick={() => setDateFilter('todas')}
-            >
-              Todas
-            </button>
+          <select
+            className="date-select"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+          >
+            <option value="todas">Todas</option>
 
             {availableDates.map(date => (
-              <button
-                key={date}
-                className={dateFilter === date ? 'date-btn active' : 'date-btn'}
-                onClick={() => setDateFilter(date)}
-              >
+              <option key={date} value={date}>
                 {new Date(date + 'T00:00:00').toLocaleDateString('es-CO', {
                   day: '2-digit',
                   month: 'short',
                 })}
-              </button>
+              </option>
             ))}
-          </div>
+          </select>
         </div>
       </div>
 
-      {/* TABLA COMPACTA */}
-      <div className="card" style={{ padding: 10 }}>
-        <div className="compact-table">
+      {/* LISTA */}
+      <div className="card compact-wrapper">
+        {filteredMatches.length === 0 ? (
+          <div className="empty-state">
+            <p>No hay partidos para los filtros seleccionados.</p>
+          </div>
+        ) : (
+          filteredMatches.map(match => {
+            const pred = predictions[match.id]
 
-          {filteredMatches.length === 0 ? (
-            <div className="empty-state">
-              <p>No hay partidos para los filtros seleccionados.</p>
-            </div>
-          ) : (
-            filteredMatches.map(match => {
-              const pred = predictions[match.id]
-
-              return (
-                <div key={match.id} className="compact-row">
-
-                  <div className="compact-left">
-                    <div className="stage">{match.stage}</div>
-
-                    <div className="teams">
-                      {match.home_team}
-                      <span className="vs">vs</span>
-                      {match.away_team}
-                    </div>
-
-                    <div className="date">
-                      🇨🇴 {new Date(match.kickoff_at).toLocaleString('es-CO', {
-                        day: '2-digit',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </div>
+            return (
+              <div key={match.id} className="mini-row">
+                <div className="mini-left">
+                  <div className="mini-teams">
+                    {match.home_team} <span>vs</span> {match.away_team}
                   </div>
 
-                  <div className="compact-center">
-                    <input
-                      className="mini-input"
-                      value={pred?.home_score ?? ''}
-                      disabled
-                    />
-                    <span className="vs">:</span>
-                    <input
-                      className="mini-input"
-                      value={pred?.away_score ?? ''}
-                      disabled
-                    />
+                  <div className="mini-date">
+                    {new Date(match.kickoff_at).toLocaleString('es-CO', {
+                      day: '2-digit',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </div>
-
-                  <div className="compact-right">
-                    {match.is_finished ? (
-                      <span className="result">
-                        {match.home_score}-{match.away_score}
-                      </span>
-                    ) : (
-                      <span className="pending">⏳</span>
-                    )}
-                  </div>
-
                 </div>
-              )
-            })
-          )}
 
-        </div>
+                <div className="mini-center">
+                  <input value={pred?.home_score ?? ''} disabled />
+                  <span>:</span>
+                  <input value={pred?.away_score ?? ''} disabled />
+                </div>
+
+                <div className="mini-right">
+                  {match.is_finished ? (
+                    <span className="done">
+                      {match.home_score}-{match.away_score}
+                    </span>
+                  ) : (
+                    <span className="pending">⏳</span>
+                  )}
+                </div>
+              </div>
+            )
+          })
+        )}
       </div>
     </div>
   )
