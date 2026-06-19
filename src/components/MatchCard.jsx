@@ -1,30 +1,11 @@
-import { useState } from 'react'
-import {
-  formatKickoffColombia,
-  getMatchStatus,
-  statusLabel
-} from '../lib/scoring'
+import { formatKickoffColombia, getMatchStatus, statusLabel } from '../lib/scoring'
 
 export default function MatchCard({
   match,
   prediction,
-  onSave,
-  showPoints = false,
-  readOnly = true
+  showPoints = false
 }) {
-  const [home, setHome] = useState(prediction?.home_score ?? '')
-  const [away, setAway] = useState(prediction?.away_score ?? '')
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-
-  // 🔒 BLOQUEO ABSOLUTO REAL
-  const editable = false
-
   const status = getMatchStatus(match)
-
-  async function handleSave() {
-    return // 🔒 NO HACE NADA
-  }
 
   return (
     <div className="card match-card">
@@ -48,18 +29,14 @@ export default function MatchCard({
         <div className="score-inputs">
           <input
             type="number"
-            value={home}
+            value={prediction?.home_score ?? ''}
             disabled
-            placeholder="-"
           />
-
           <span className="score-separator">:</span>
-
           <input
             type="number"
-            value={away}
+            value={prediction?.away_score ?? ''}
             disabled
-            placeholder="-"
           />
         </div>
 
@@ -68,10 +45,7 @@ export default function MatchCard({
 
       {match.is_finished && (
         <div className="match-result">
-          Resultado real:{' '}
-          <strong>
-            {match.home_score} - {match.away_score}
-          </strong>
+          Resultado real: <strong>{match.home_score} - {match.away_score}</strong>
         </div>
       )}
 
@@ -80,10 +54,6 @@ export default function MatchCard({
           Puntos obtenidos: <span>{prediction.points ?? 0}</span> / 5
         </div>
       )}
-
-      <div className="match-result">
-        🔒 Pronósticos deshabilitados
-      </div>
     </div>
   )
 }
