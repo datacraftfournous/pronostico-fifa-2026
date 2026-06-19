@@ -10,7 +10,7 @@ export default function DailyPrediction() {
   const [loading, setLoading] = useState(true)
 
   const [groupFilter, setGroupFilter] = useState('todos')
-  const [dateFilter, setDateFilter] = useState('todas')
+  const [dateFilter, setDateFilter] = useState('all')
 
   function getLocalDate(dateString) {
     return new Date(dateString).toLocaleDateString('en-CA', {
@@ -58,10 +58,6 @@ export default function DailyPrediction() {
     }
   }
 
-  useEffect(() => {
-    setDateFilter('todas')
-  }, [groupFilter])
-
   const availableDates = useMemo(() => {
     let source = matches
 
@@ -79,8 +75,10 @@ export default function DailyPrediction() {
       result = result.filter(m => m.group_code === groupFilter)
     }
 
-    if (dateFilter !== 'todas') {
-      result = result.filter(m => getLocalDate(m.kickoff_at) === dateFilter)
+    if (dateFilter !== 'all') {
+      result = result.filter(
+        m => getLocalDate(m.kickoff_at) === dateFilter
+      )
     }
 
     return result.sort(
@@ -101,11 +99,13 @@ export default function DailyPrediction() {
       <h2 className="page-title">📅 Daily Prediction</h2>
 
       <p className="page-subtitle">
-        Vista tipo reporte (tabla de análisis)
+        Vista tipo reporte con filtros dinámicos
       </p>
 
       {/* FILTROS */}
       <div className="card predictions-filters">
+
+        {/* GRUPO */}
         <div>
           <label className="filter-label">Grupo</label>
 
@@ -129,26 +129,29 @@ export default function DailyPrediction() {
           </div>
         </div>
 
+        {/* SLICER FECHA */}
         <div>
-          <label className="filter-label">Fecha</label>
+          <label className="filter-label">Fecha (Slicer)</label>
 
           <select
             className="date-select"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
           >
-            <option value="todas">Todas</option>
+            <option value="all">Todas las fechas</option>
 
             {availableDates.map(date => (
               <option key={date} value={date}>
                 {new Date(date + 'T00:00:00').toLocaleDateString('es-CO', {
                   day: '2-digit',
                   month: 'short',
+                  year: 'numeric',
                 })}
               </option>
             ))}
           </select>
         </div>
+
       </div>
 
       {/* TABLA DATAVIZ */}
@@ -160,7 +163,7 @@ export default function DailyPrediction() {
           </div>
         ) : (
 
-          <div style={{ width: '100%' }}>
+          <div>
 
             {/* HEADER */}
             <div
@@ -227,6 +230,7 @@ export default function DailyPrediction() {
                 </div>
               )
             })}
+
           </div>
 
         )}
