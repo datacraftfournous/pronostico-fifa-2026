@@ -73,7 +73,6 @@ export default function DailyPrediction() {
     setMatchFilter('all')
   }, [dateFilter])
 
-  // Mapa rápido: predicciones por match_id + user_id
   const predMap = useMemo(() => {
     const map = {}
     for (const p of predictions) {
@@ -158,12 +157,18 @@ export default function DailyPrediction() {
                 <th className="pivot-sticky">Jugador</th>
                 {columnsMatches.map(m => (
                   <th key={m.id} title={`${m.home_team} vs ${m.away_team}`}>
-  <div className="pivot-match-header">
-    <span className="pivot-flag">{getFlag(m.home_team)}</span>
-    <span className="pivot-vs">vs</span>
-    <span className="pivot-flag">{getFlag(m.away_team)}</span>
-  </div>
-</th>
+                    <div className="pivot-match-header">
+                      <div className="pivot-team-block">
+                        <span className="pivot-flag">{getFlag(m.home_team)}</span>
+                        <span className="pivot-team-name">{m.home_team}</span>
+                      </div>
+                      <span className="pivot-vs">vs</span>
+                      <div className="pivot-team-block">
+                        <span className="pivot-flag">{getFlag(m.away_team)}</span>
+                        <span className="pivot-team-name">{m.away_team}</span>
+                      </div>
+                    </div>
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -180,12 +185,15 @@ export default function DailyPrediction() {
                     return (
                       <td key={m.id} className="pivot-cell">
                         <div className="pivot-cell-content">
-                          <span className="pivot-pred">
-                            {pred ? `${pred.home_score}-${pred.away_score}` : '—'}
-                          </span>
-                          <span className="pivot-real">
-                            {isFinished ? `${m.home_score}-${m.away_score}` : '⏳'}
-                          </span>
+                          <div className="pivot-pred-real">
+                            <span className="pivot-pred">
+                              {pred ? `${pred.home_score}-${pred.away_score}` : '—'}
+                            </span>
+                            <span className="pivot-divider">|</span>
+                            <span className="pivot-real">
+                              {isFinished ? `${m.home_score}-${m.away_score}` : '⏳'}
+                            </span>
+                          </div>
                           <span
                             className="pivot-points"
                             style={{ color: isFinished ? 'var(--gold)' : 'var(--text-muted)' }}
