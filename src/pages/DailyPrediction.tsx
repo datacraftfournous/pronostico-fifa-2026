@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { getFlag } from '../lib/flags'
 
 export default function DailyPrediction() {
   const [matches, setMatches] = useState([])
@@ -157,12 +158,12 @@ export default function DailyPrediction() {
                 <th className="pivot-sticky">Jugador</th>
                 {columnsMatches.map(m => (
                   <th key={m.id} title={`${m.home_team} vs ${m.away_team}`}>
-                    <div className="pivot-match-header">
-                      <span className="pivot-team">{m.home_team.slice(0, 3).toUpperCase()}</span>
-                      <span className="pivot-vs">vs</span>
-                      <span className="pivot-team">{m.away_team.slice(0, 3).toUpperCase()}</span>
-                    </div>
-                  </th>
+  <div className="pivot-match-header">
+    <span className="pivot-flag">{getFlag(m.home_team)}</span>
+    <span className="pivot-vs">vs</span>
+    <span className="pivot-flag">{getFlag(m.away_team)}</span>
+  </div>
+</th>
                 ))}
               </tr>
             </thead>

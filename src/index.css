@@ -668,3 +668,121 @@ h1, h2, h3, .title-font {
 .pending {
   opacity: 0.5;
 }
+
+/* ===== TABLA PIVOT - REPORTE ===== */
+.pivot-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.7rem;
+}
+
+.pivot-table th,
+.pivot-table td {
+  border: none;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.12);
+  border-right: 1px solid rgba(255, 215, 0, 0.12);
+  padding: 0.4rem 0.2rem;
+  text-align: center;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.pivot-table th:last-child,
+.pivot-table td:last-child {
+  border-right: none;
+}
+
+.pivot-table thead th {
+  background: var(--bg-card-hover);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--gold);
+}
+
+.pivot-match-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  line-height: 1.1;
+}
+
+.pivot-flag {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.pivot-vs {
+  font-size: 0.55rem;
+  opacity: 0.5;
+}
+
+.pivot-sticky {
+  position: sticky;
+  left: 0;
+  background: var(--bg-card);
+  z-index: 1;
+}
+
+.pivot-player {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-right: 2px solid var(--gold) !important;
+}
+
+.pivot-cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  line-height: 1.1;
+}
+
+.pivot-pred-real {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  width: 100%;
+}
+
+.pivot-pred {
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 1.6rem;
+  text-align: center;
+}
+
+.pivot-divider {
+  color: var(--gold);
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.pivot-real {
+  font-weight: 700;
+  color: var(--text);
+  min-width: 1.6rem;
+  text-align: center;
+}
+
+.pivot-points {
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.pivot-table tbody tr:hover td {
+  background: rgba(255, 215, 0, 0.04);
+}
+
+.pivot-table tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.015);
+}
