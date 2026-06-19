@@ -3,7 +3,8 @@ import { formatKickoffColombia, getMatchStatus, statusLabel } from '../lib/scori
 export default function MatchCard({
   match,
   prediction,
-  showPoints = false
+  showPoints = false,
+  readOnly = true
 }) {
   const status = getMatchStatus(match)
 
@@ -30,13 +31,13 @@ export default function MatchCard({
           <input
             type="number"
             value={prediction?.home_score ?? ''}
-            disabled
+            disabled={readOnly}
           />
           <span className="score-separator">:</span>
           <input
             type="number"
             value={prediction?.away_score ?? ''}
-            disabled
+            disabled={readOnly}
           />
         </div>
 
