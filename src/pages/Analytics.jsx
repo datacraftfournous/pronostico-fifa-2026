@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Bar, Doughnut } from 'react-chartjs-2'
+import { Doughnut } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
-  BarElement,
-  CategoryScale,
-  LinearScale,
   ArcElement,
   Tooltip,
   Legend,
@@ -12,7 +9,7 @@ import {
 import { supabase } from '../lib/supabase'
 import { getFlagUrl } from '../lib/flags'
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, ArcElement, Tooltip, Legend)
+ChartJS.register(ArcElement, Tooltip, Legend)
 
 function Flag({ team }) {
   const url = getFlagUrl(team)
@@ -73,7 +70,6 @@ export default function Analytics() {
       .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
   }, [matches, dateFilter])
 
-  // Seleccionar automáticamente el primer partido del día al cambiar fecha
   useEffect(() => {
     if (matchesOfDay.length > 0) {
       setMatchFilter(String(matchesOfDay[0].id))
@@ -103,10 +99,10 @@ export default function Analytics() {
   const analysis = useMemo(() => {
     if (!selectedMatch || matchPredictions.length === 0) return null
 
-    // Distribución de marcadores exactos pronosticados
     const scoreCounts = {}
     let totalHome = 0, totalAway = 0
     let homeVotes = 0, awayVotes = 0, drawVotes = 0
+    let cleanSheetHome = 0, cleanSheetAway = 0
 
     for (const p of matchPredictions) {
       const key = `${p.home_score}-${p.away_score}`
@@ -117,24 +113,35 @@ export default function Analytics() {
       if (p.home_score > p.away_score) homeVotes++
       else if (p.home_score < p.away_score) awayVotes++
       else drawVotes++
+
+      if (p.away_score === 0) cleanSheetHome++
+      if (p.home_score === 0) cleanSheetAway++
     }
 
     const sortedScores = Object.entries(scoreCounts).sort((a, b) => b[1] - a[1])
     const topScore = sortedScores[0]
     const total = matchPredictions.length
 
-    const avgHome = (totalHome / total).toFixed(1)
-    const avgAway = (totalAway / total).toFixed(1)
+    const avgHome = (totalHome / total).toFixed(2)
+    const avgAway = (totalAway / total).toFixed(2)
+    const avgDiff = (totalHome / total) - (totalAway / total)
 
-    let favorite = 'Empate'
-    let favoriteVotes = drawVotes
-    if (homeVotes >= awayVotes && homeVotes >= drawVotes) {
-      favorite = selectedMatch.home_team
-      favoriteVotes = homeVotes
-    } else if (awayVotes >= homeVotes && awayVotes >= drawVotes) {
-      favorite = selectedMatch.away_team
-      favoriteVotes = awayVotes
-    }
+    const homePct = Math.round((homeVotes / total) * 100)
+    const awayPct = Math.round((awayVotes / total) * 100)
+    const drawPct = Math.round((drawVotes / total) * 100)
+    const cleanSheetHomePct = Math.round((cleanSheetHome / total) * 100)
+    const cleanSheetAwayPct = Math.round((cleanSheetAway / total) * 100)
+
+    // Mayor diferencia esperada (a favor del local) y predicción más conservadora
+    const withDiff = matchPredictions.map(p => ({
+      ...p,
+      diff: p.home_score - p.away_score,
+      totalGoals: p.home_score + p.away_score,
+    }))
+
+    const biggestHomeDiff = [...withDiff].sort((a, b) => b.diff - a.diff).slice(0, 2)
+    const biggestAwayDiff = [...withDiff].sort((a, b) => a.diff - b.diff).slice(0, 2)
+    const mostConservative = [...withDiff].sort((a, b) => a.totalGoals - b.totalGoals).slice(0, 2)
 
     // Aciertos (solo si el partido ya terminó)
     let exactCount = 0, winnerCount = 0, missCount = 0
@@ -152,24 +159,93 @@ export default function Analytics() {
       }
     }
 
+    // ===== INSIGHTS GENERADOS CON REGLAS =====
+    const insights = []
+
+    if (homePct === 100 || awayPct === 100) {
+      const team = homePct === 100 ? selectedMatch.home_team : selectedMatch.away_team
+      insights.push({
+        icon: '🏆',
+        title: `Confianza absoluta en ${team}`,
+        text: `Ningún participante apostó por empate o derrota. Existe consenso total de que ${team} ganará el encuentro.`,
+      })
+    } else if (Math.max(homePct, awayPct, drawPct) >= 70) {
+      const leader = homePct >= awayPct && homePct >= drawPct ? selectedMatch.home_team
+        : awayPct >= drawPct ? selectedMatch.away_team : 'el empate'
+      const pct = Math.max(homePct, awayPct, drawPct)
+      insights.push({
+        icon: '📊',
+        title: `Mayoría clara a favor de ${leader}`,
+        text: `${pct}% de los participantes coinciden en este resultado.`,
+      })
+    } else {
+      insights.push({
+        icon: '🤔',
+        title: 'Pronósticos divididos',
+        text: `No hay consenso claro: ${homePct}% favorece a ${selectedMatch.home_team}, ${awayPct}% a ${selectedMatch.away_team}, ${drawPct}% espera empate.`,
+      })
+    }
+
+    if (cleanSheetHomePct >= 60) {
+      insights.push({
+        icon: '🛡️',
+        title: 'Defensa sólida esperada',
+        text: `${cleanSheetHome} de los ${total} participantes creen que ${selectedMatch.away_team} no anotará. ${cleanSheetHomePct}% espera arco en cero para ${selectedMatch.home_team}.`,
+      })
+    } else if (cleanSheetAwayPct >= 60) {
+      insights.push({
+        icon: '🛡️',
+        title: 'Defensa sólida esperada',
+        text: `${cleanSheetAway} de los ${total} participantes creen que ${selectedMatch.home_team} no anotará. ${cleanSheetAwayPct}% espera arco en cero para ${selectedMatch.away_team}.`,
+      })
+    }
+
+    const highScoring = matchPredictions.filter(p => (p.home_score + p.away_score) >= 3).length
+    const highScoringPct = Math.round((highScoring / total) * 100)
+    if (highScoringPct >= 50) {
+      insights.push({
+        icon: '⚽',
+        title: 'Se esperan varios goles',
+        text: `${highScoring} de los ${total} pronósticos proyectan 3 goles o más en total.`,
+      })
+    }
+
+    const concentration = Math.round((topScore[1] / total) * 100)
+    if (concentration >= 30) {
+      insights.push({
+        icon: '🎯',
+        title: 'Alta concentración de predicciones',
+        text: `Los resultados se concentran principalmente en pocos marcadores, mostrando una percepción muy similar entre los jugadores.`,
+      })
+    } else {
+      insights.push({
+        icon: '🌈',
+        title: 'Predicciones muy variadas',
+        text: `Los participantes tienen visiones distintas: ${sortedScores.length} marcadores diferentes fueron pronosticados.`,
+      })
+    }
+
+    // Insight principal (resumen final)
+    let mainInsight = ''
+    const leaderTeam = homePct >= awayPct && homePct > drawPct ? selectedMatch.home_team
+      : awayPct > homePct && awayPct > drawPct ? selectedMatch.away_team : null
+
+    if (leaderTeam) {
+      const diffAbs = Math.abs(avgDiff).toFixed(1)
+      mainInsight = `Existe consenso en una victoria de ${leaderTeam}. La mayoría espera una diferencia cercana a ${diffAbs} goles a su favor.`
+    } else {
+      mainInsight = `Los pronósticos están divididos entre ${selectedMatch.home_team}, ${selectedMatch.away_team} y el empate, sin una tendencia dominante clara.`
+    }
+
     return {
-      topScore, sortedScores, avgHome, avgAway,
-      favorite, favoriteVotes, total,
-      homeVotes, awayVotes, drawVotes,
-      exactCount, winnerCount, missCount,
+      topScore, sortedScores, avgHome, avgAway, avgDiff,
+      homeVotes, awayVotes, drawVotes, homePct, awayPct, drawPct,
+      cleanSheetHome, cleanSheetAway, cleanSheetHomePct, cleanSheetAwayPct,
+      total, exactCount, winnerCount, missCount,
+      biggestHomeDiff, biggestAwayDiff, mostConservative,
+      insights, mainInsight,
     }
   }, [selectedMatch, matchPredictions])
-
-  // Ranking de mejor racha (todos los partidos finalizados)
-  const ranking = useMemo(() => {
-    return profiles
-      .map(p => ({
-        username: p.display_name || p.username,
-        points: p.total_points || 0,
-      }))
-      .sort((a, b) => b.points - a.points)
-      .slice(0, 5)
-  }, [profiles])
 
   if (loading) {
     return <div className="loading-screen"><div className="loader" /></div>
@@ -214,175 +290,179 @@ export default function Analytics() {
       ) : (
         <>
           {/* HEADER DEL PARTIDO */}
-          <div className="card analytics-match-header">
+          <div className="analytics-banner">
             <Flag team={selectedMatch.home_team} />
-            <span style={{ fontWeight: 700 }}>{selectedMatch.home_team}</span>
-            <span style={{ opacity: 0.5 }}>vs</span>
-            <span style={{ fontWeight: 700 }}>{selectedMatch.away_team}</span>
+            <h3 className="analytics-banner-title">
+              {selectedMatch.home_team} vs {selectedMatch.away_team}
+            </h3>
             <Flag team={selectedMatch.away_team} />
-            {selectedMatch.is_finished && (
-              <span className="badge badge-finalizado" style={{ marginLeft: '0.75rem' }}>
-                Real: {selectedMatch.home_score}-{selectedMatch.away_score}
-              </span>
-            )}
           </div>
 
-          {/* KPIs */}
-          <div className="analytics-kpi-grid">
-            <div className="analytics-kpi">
-              <span className="analytics-kpi-label">Marcador más votado</span>
-              <span className="analytics-kpi-value">{analysis.topScore[0]}</span>
-              <span className="analytics-kpi-sub">{analysis.topScore[1]} de {analysis.total} jugadores</span>
-            </div>
-            <div className="analytics-kpi">
-              <span className="analytics-kpi-label">Favorito de la mayoría</span>
-              <span className="analytics-kpi-value">{analysis.favorite}</span>
-              <span className="analytics-kpi-sub">{analysis.favoriteVotes} de {analysis.total} votos</span>
-            </div>
-            <div className="analytics-kpi">
-              <span className="analytics-kpi-label">Promedio pronosticado</span>
-              <span className="analytics-kpi-value">{analysis.avgHome} - {analysis.avgAway}</span>
-            </div>
-            {selectedMatch.is_finished && (
-              <div className="analytics-kpi">
-                <span className="analytics-kpi-label">Acertaron el exacto</span>
-                <span className="analytics-kpi-value" style={{ color: 'var(--gold)' }}>{analysis.exactCount}</span>
-                <span className="analytics-kpi-sub">de {analysis.total} jugadores</span>
+          <div className="analytics-grid">
+            {/* KPIs PRINCIPALES */}
+            <div className="card analytics-panel">
+              <h4 className="analytics-panel-title">KPIs principales</h4>
+              <div className="analytics-kpi-row">
+                <span className="analytics-kpi-icon">👥</span>
+                <span className="analytics-kpi-text">Total participantes</span>
+                <span className="analytics-kpi-num">{analysis.total}</span>
               </div>
-            )}
-          </div>
-
-          {/* GRÁFICO: Distribución de marcadores */}
-          <div className="card" style={{ marginTop: '1rem' }}>
-            <h3 style={{ color: 'var(--gold)', fontSize: '1rem', marginBottom: '1rem' }}>
-              Distribución de marcadores pronosticados
-            </h3>
-            <div style={{ position: 'relative', height: '220px' }}>
-              <Bar
-                data={{
-                  labels: analysis.sortedScores.map(([score]) => score),
-                  datasets: [{
-                    label: 'Jugadores',
-                    data: analysis.sortedScores.map(([, count]) => count),
-                    backgroundColor: '#00c853',
-                    borderRadius: 4,
-                  }],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: { legend: { display: false } },
-                  scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: '#1e3a5f' } },
-                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
-                  },
-                }}
-              />
+              <div className="analytics-kpi-row">
+                <span className="analytics-kpi-icon">🏆</span>
+                <span className="analytics-kpi-text">Victoria {selectedMatch.home_team} pronosticada</span>
+                <span className="analytics-kpi-num c-green">{analysis.homePct}%</span>
+              </div>
+              <div className="analytics-kpi-row">
+                <span className="analytics-kpi-icon">🤝</span>
+                <span className="analytics-kpi-text">Empates pronosticados</span>
+                <span className="analytics-kpi-num c-amber">{analysis.drawPct}%</span>
+              </div>
+              <div className="analytics-kpi-row">
+                <span className="analytics-kpi-icon">🛡️</span>
+                <span className="analytics-kpi-text">Victoria {selectedMatch.away_team} pronosticada</span>
+                <span className="analytics-kpi-num c-red">{analysis.awayPct}%</span>
+              </div>
+              <div className="analytics-kpi-row">
+                <span className="analytics-kpi-icon">🥅</span>
+                <span className="analytics-kpi-text">Arco en cero para {selectedMatch.home_team}</span>
+                <span className="analytics-kpi-num c-purple">{analysis.cleanSheetHomePct}%</span>
+              </div>
             </div>
-          </div>
 
-          {/* GRÁFICO: Quién favorece a quién */}
-          <div className="card" style={{ marginTop: '1rem' }}>
-            <h3 style={{ color: 'var(--gold)', fontSize: '1rem', marginBottom: '1rem' }}>
-              ¿A quién le apostaron como ganador?
-            </h3>
-            <div style={{ position: 'relative', height: '200px', maxWidth: '280px', margin: '0 auto' }}>
-              <Doughnut
-                data={{
-                  labels: [selectedMatch.home_team, 'Empate', selectedMatch.away_team],
-                  datasets: [{
-                    data: [analysis.homeVotes, analysis.drawVotes, analysis.awayVotes],
-                    backgroundColor: ['#00c853', '#94a3b8', '#ffd700'],
-                    borderWidth: 0,
-                  }],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: 'bottom',
-                      labels: { color: '#f0f4f8', font: { size: 11 }, boxWidth: 12 },
-                    },
-                  },
-                }}
-              />
-            </div>
-          </div>
-
-          {/* RESULTADOS DE ACIERTO (solo si finalizó) */}
-          {selectedMatch.is_finished && (
-            <div className="card" style={{ marginTop: '1rem' }}>
-              <h3 style={{ color: 'var(--gold)', fontSize: '1rem', marginBottom: '1rem' }}>
-                Nivel de acierto de los jugadores
-              </h3>
-              <div style={{ position: 'relative', height: '160px' }}>
-                <Bar
+            {/* MARCADOR MÁS POPULAR */}
+            <div className="card analytics-panel">
+              <h4 className="analytics-panel-title">Marcador más popular</h4>
+              <div className="analytics-score-box">{analysis.topScore[0]}</div>
+              <p className="analytics-score-sub">
+                👥 {analysis.topScore[1]} participantes ({Math.round((analysis.topScore[1] / analysis.total) * 100)}%)
+              </p>
+              <div className="analytics-donut-wrap">
+                <Doughnut
                   data={{
-                    labels: ['Exacto', 'Ganador', 'Falló'],
+                    labels: analysis.sortedScores.slice(0, 4).map(([s]) => s),
                     datasets: [{
-                      data: [analysis.exactCount, analysis.winnerCount, analysis.missCount],
-                      backgroundColor: ['#ffd700', '#00c853', '#ef4444'],
-                      borderRadius: 4,
+                      data: analysis.sortedScores.slice(0, 4).map(([, c]) => c),
+                      backgroundColor: ['#00c853', '#3b82f6', '#f59e0b', '#a855f7'],
+                      borderWidth: 0,
                     }],
                   }}
                   options={{
-                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: {
-                      x: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: '#1e3a5f' } },
-                      y: { ticks: { color: '#f0f4f8' }, grid: { display: false } },
-                    },
                   }}
                 />
               </div>
             </div>
-          )}
 
-          {/* TABLA DETALLE: qué dijo cada jugador */}
-          <div className="card" style={{ marginTop: '1rem' }}>
-            <h3 style={{ color: 'var(--gold)', fontSize: '1rem', marginBottom: '1rem' }}>
-              Pronóstico de cada jugador
-            </h3>
-            <table className="ranking-table">
-              <thead>
-                <tr><th>Jugador</th><th>Pronóstico</th></tr>
-              </thead>
-              <tbody>
-                {matchPredictions
-                  .slice()
-                  .sort((a, b) => a.username.localeCompare(b.username))
-                  .map(p => (
-                    <tr key={p.id}>
-                      <td>{p.username}</td>
-                      <td><strong>{p.home_score}-{p.away_score}</strong></td>
+            {/* DISTRIBUCIÓN */}
+            <div className="card analytics-panel">
+              <h4 className="analytics-panel-title">Distribución de pronósticos</h4>
+              <table className="analytics-dist-table">
+                <thead>
+                  <tr><th>Marcador</th><th>Part.</th><th>%</th></tr>
+                </thead>
+                <tbody>
+                  {analysis.sortedScores.map(([score, count]) => (
+                    <tr key={score}>
+                      <td><strong>{score}</strong></td>
+                      <td>
+                        <div className="analytics-bar-track">
+                          <div
+                            className="analytics-bar-fill"
+                            style={{ width: `${(count / analysis.total) * 100}%` }}
+                          >
+                            {count}
+                          </div>
+                        </div>
+                      </td>
+                      <td>{Math.round((count / analysis.total) * 100)}%</td>
                     </tr>
                   ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* TOP 5 RANKING GENERAL */}
+          {/* GOLES PROMEDIO */}
           <div className="card" style={{ marginTop: '1rem' }}>
-            <h3 style={{ color: 'var(--gold)', fontSize: '1rem', marginBottom: '1rem' }}>
-              🏆 Top 5 general (todos los partidos)
-            </h3>
-            <table className="ranking-table">
-              <thead>
-                <tr><th>#</th><th>Jugador</th><th>Puntos</th></tr>
-              </thead>
-              <tbody>
-                {ranking.map((r, i) => (
-                  <tr key={r.username}>
-                    <td>{i + 1}</td>
-                    <td>{r.username}</td>
-                    <td className="rank-points">{r.points}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <h4 className="analytics-panel-title">Goles promedio esperados</h4>
+            <div className="analytics-goals-row">
+              <div className="analytics-goals-team">
+                <Flag team={selectedMatch.home_team} />
+                <span>{selectedMatch.home_team}</span>
+                <strong>{analysis.avgHome}</strong>
+              </div>
+              <span style={{ fontSize: '1.5rem' }}>⚽</span>
+              <div className="analytics-goals-team">
+                <Flag team={selectedMatch.away_team} />
+                <span>{selectedMatch.away_team}</span>
+                <strong>{analysis.avgAway}</strong>
+              </div>
+            </div>
+            <div className="analytics-diff-box">
+              Diferencia promedio esperada:{' '}
+              <strong style={{ color: 'var(--gold)' }}>
+                {analysis.avgDiff >= 0 ? '+' : ''}{analysis.avgDiff.toFixed(2)} goles
+                {analysis.avgDiff >= 0 ? ` para ${selectedMatch.home_team}` : ` para ${selectedMatch.away_team}`}
+              </strong>
+            </div>
+          </div>
+
+          {/* INSIGHTS */}
+          <div className="card" style={{ marginTop: '1rem' }}>
+            <h4 className="analytics-panel-title">💡 Insights relevantes</h4>
+            {analysis.insights.map((ins, i) => (
+              <div key={i} className="analytics-insight">
+                <span className="analytics-insight-icon">{ins.icon}</span>
+                <div>
+                  <strong>{ins.title}</strong>
+                  <p>{ins.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* RANKING EXTREMOS */}
+          <div className="analytics-grid" style={{ marginTop: '1rem' }}>
+            <div className="card analytics-panel">
+              <h4 className="analytics-panel-title">🏆 Mayor diferencia esperada</h4>
+              {analysis.biggestHomeDiff.map(p => (
+                <div key={p.id} className="analytics-rank-row">
+                  <span>{p.username}</span>
+                  <span className="badge badge-finalizado">{p.home_score}-{p.away_score}</span>
+                </div>
+              ))}
+            </div>
+            <div className="card analytics-panel">
+              <h4 className="analytics-panel-title">🛡️ Predicción más conservadora</h4>
+              {analysis.mostConservative.map(p => (
+                <div key={p.id} className="analytics-rank-row">
+                  <span>{p.username}</span>
+                  <span className="badge badge-pendiente">{p.home_score}-{p.away_score}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ACIERTOS (si finalizó) */}
+          {selectedMatch.is_finished && (
+            <div className="card" style={{ marginTop: '1rem' }}>
+              <h4 className="analytics-panel-title">
+                Resultado real: {selectedMatch.home_score}-{selectedMatch.away_score} — Nivel de acierto
+              </h4>
+              <div className="analytics-accuracy-row">
+                <div><strong className="c-amber">{analysis.exactCount}</strong><span>Exacto</span></div>
+                <div><strong className="c-green">{analysis.winnerCount}</strong><span>Ganador</span></div>
+                <div><strong className="c-red">{analysis.missCount}</strong><span>Falló</span></div>
+              </div>
+            </div>
+          )}
+
+          {/* INSIGHT PRINCIPAL */}
+          <div className="analytics-main-insight">
+            <span style={{ fontSize: '1.5rem' }}>⭐</span>
+            <span><strong>Insight principal:</strong> {analysis.mainInsight}</span>
           </div>
         </>
       )}

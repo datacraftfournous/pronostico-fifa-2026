@@ -849,3 +849,227 @@ h1, h2, h3, .title-font {
   font-size: 0.7rem;
   color: var(--text-muted);
 }
+
+
+
+
+.analytics-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #0d2137 0%, #1a3a2a 100%);
+  border: 2px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.analytics-banner-title {
+  color: var(--gold);
+  font-size: 1.3rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.analytics-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.analytics-panel-title {
+  color: var(--gold);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.analytics-kpi-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.8rem;
+}
+
+.analytics-kpi-icon {
+  font-size: 1rem;
+}
+
+.analytics-kpi-text {
+  flex: 1;
+  color: var(--text-muted);
+}
+
+.analytics-kpi-num {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.c-green { color: var(--green); }
+.c-amber { color: var(--warning); }
+.c-red { color: var(--danger); }
+.c-purple { color: #a855f7; }
+
+.analytics-score-box {
+  background: var(--green);
+  color: #000;
+  font-size: 2rem;
+  font-weight: 800;
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.analytics-score-sub {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.analytics-donut-wrap {
+  position: relative;
+  height: 160px;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.analytics-dist-table {
+  width: 100%;
+  font-size: 0.8rem;
+}
+
+.analytics-dist-table th {
+  text-align: left;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  padding-bottom: 0.4rem;
+}
+
+.analytics-dist-table td {
+  padding: 0.3rem 0.2rem;
+  vertical-align: middle;
+}
+
+.analytics-bar-track {
+  background: var(--bg-dark);
+  border-radius: 6px;
+  height: 22px;
+  overflow: hidden;
+  position: relative;
+}
+
+.analytics-bar-fill {
+  background: var(--green);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.75rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.4rem;
+  min-width: 1.5rem;
+}
+
+.analytics-goals-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem 0;
+}
+
+.analytics-goals-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.analytics-goals-team strong {
+  font-size: 1.5rem;
+  color: var(--text);
+}
+
+.analytics-diff-box {
+  text-align: center;
+  background: var(--bg-card-hover);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.analytics-insight {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.analytics-insight:last-child {
+  border-bottom: none;
+}
+
+.analytics-insight-icon {
+  font-size: 1.2rem;
+}
+
+.analytics-insight p {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+.analytics-rank-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.85rem;
+}
+
+.analytics-accuracy-row {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+}
+
+.analytics-accuracy-row div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.analytics-accuracy-row strong {
+  font-size: 1.75rem;
+}
+
+.analytics-accuracy-row span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.analytics-main-insight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #0d2137 0%, #1a3a2a 100%);
+  border: 2px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
