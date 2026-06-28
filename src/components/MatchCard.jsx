@@ -33,8 +33,9 @@ export default function MatchCard({ match, prediction, onSave, showPoints = fals
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } else {
-      setSaveError('No se pudo guardar. Intenta de nuevo.')
-      setTimeout(() => setSaveError(''), 4000)
+      const detalle = result.error?.message || result.reason || 'sin detalle'
+      setSaveError(`No se pudo guardar (${detalle})`)
+      setTimeout(() => setSaveError(''), 8000)
     }
   }
 
