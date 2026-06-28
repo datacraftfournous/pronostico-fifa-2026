@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, usernameToEmail } from '../lib/supabase'
-import { calcularPuntos } from '../lib/scoring'
-import { formatKickoffColombia } from '../lib/scoring'
+import { calcularPuntosAny, formatKickoffColombia } from '../lib/scoring'
 
 export default function Admin() {
   const [tab, setTab] = useState('resultados')
@@ -110,6 +109,15 @@ export default function Admin() {
     const awayScore = parseInt(resultAway, 10)
     const matchId = resultMatchId
 
+    // Necesitamos el objeto match completo (no solo el id) para que
+    // calcularPuntosAny sepa qué fórmula aplicar (grupos vs eliminatoria).
+    const match = matches.find((m) => String(m.id) === String(matchId))
+
+    if (!match) {
+      setError('No se encontró el partido seleccionado')
+      return
+    }
+
     const { error: updateError } = await supabase
       .from('matches')
       .update({
@@ -129,13 +137,14 @@ export default function Admin() {
       .select('*')
       .eq('match_id', matchId)
 
-   for (const pred of predictions || []) {
-  const points = calcularPuntos(
-    parseInt(pred.home_score, 10),
-    parseInt(pred.away_score, 10),
-    homeScore,
-    awayScore
-  )
+    for (const pred of predictions || []) {
+      const points = calcularPuntosAny(
+        parseInt(pred.home_score, 10),
+        parseInt(pred.away_score, 10),
+        homeScore,
+        awayScore,
+        match
+      )
       await supabase
         .from('predictions')
         .update({ points })
@@ -242,7 +251,7 @@ export default function Admin() {
                 <label>Fase</label>
                 <select value={stage} onChange={(e) => setStage(e.target.value)}>
                   {['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F',
-                    'Grupo G','Grupo H','Octavos','Cuartos','Semifinal','Tercer puesto','Final'
+                    'Grupo G','Grupo H','Dieciseisavos de final','Octavos','Cuartos','Semifinal','Tercer puesto','Final'
                   ].map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>

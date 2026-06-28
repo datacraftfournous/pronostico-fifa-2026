@@ -50,7 +50,7 @@ export default function Layout() {
           🏆 Ranking
         </NavLink>
         
-        <NavLink to="/Predictions_original" end className={linkClass}>
+        <NavLink to="/Predictions" end className={linkClass}>
           📅 Prediction
         </NavLink>
 
