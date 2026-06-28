@@ -12,6 +12,7 @@ export default function MatchCard({ match, prediction, onSave, showPoints = fals
   const [away, setAway] = useState(prediction?.away_score ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   const editable = !readOnly && canEditAnyPrediction(match)
   const status = getMatchStatus(match)
@@ -20,10 +21,21 @@ export default function MatchCard({ match, prediction, onSave, showPoints = fals
   async function handleSave() {
     if (home === '' || away === '') return
     setSaving(true)
-    await onSave(match.id, parseInt(home, 10), parseInt(away, 10))
+    setSaveError('')
+    const result = await onSave(match.id, parseInt(home, 10), parseInt(away, 10))
     setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+
+    // onSave puede no devolver nada en componentes viejos (ej. modo solo
+    // lectura); en ese caso no mostramos ni éxito ni error.
+    if (result === undefined) return
+
+    if (result.success) {
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } else {
+      setSaveError('No se pudo guardar. Intenta de nuevo.')
+      setTimeout(() => setSaveError(''), 4000)
+    }
   }
 
   return (
@@ -85,6 +97,11 @@ export default function MatchCard({ match, prediction, onSave, showPoints = fals
           >
             {saving ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar pronóstico'}
           </button>
+          {saveError && (
+            <div style={{ color: 'var(--red, #e05a5a)', fontSize: '0.8rem', marginTop: '0.4rem' }}>
+              ⚠️ {saveError}
+            </div>
+          )}
         </div>
       )}
 

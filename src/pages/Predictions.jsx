@@ -61,11 +61,25 @@ export default function Predictions() {
 
   // Guardado habilitado SOLO para partidos de eliminatoria (id > 72).
   // Fase de grupos sigue bloqueada por completo (ya cerrada).
+  // IMPORTANTE: comparamos con String() (no ===) porque matchId puede
+  // llegar como string desde el input/evento, mientras match.id es number.
   async function handleSave(matchId, homeScore, awayScore) {
-    const match = matches.find((m) => m.id === matchId)
-    if (!match || !isKnockoutMatch(match)) return
+    const match = matches.find((m) => String(m.id) === String(matchId))
 
-    const existing = predictions[matchId]
+    if (!match) {
+      console.error('No se encontró el partido', matchId)
+      return { success: false, reason: 'match_not_found' }
+    }
+
+    if (!isKnockoutMatch(match)) {
+      console.error('Partido de fase de grupos, edición bloqueada', matchId)
+      return { success: false, reason: 'group_stage_locked' }
+    }
+
+    // Usamos el id real (number) del match encontrado para todo lo demás,
+    // así evitamos cualquier desajuste de tipos en las claves del objeto predictions.
+    const realMatchId = match.id
+    const existing = predictions[realMatchId]
 
     if (existing) {
       const { error } = await supabase
@@ -77,27 +91,35 @@ export default function Predictions() {
         })
         .eq('id', existing.id)
 
-      if (!error) {
-        setPredictions((prev) => ({
-          ...prev,
-          [matchId]: { ...existing, home_score: homeScore, away_score: awayScore },
-        }))
+      if (error) {
+        console.error('Error actualizando predicción', error)
+        return { success: false, reason: 'supabase_error', error }
       }
+
+      setPredictions((prev) => ({
+        ...prev,
+        [realMatchId]: { ...existing, home_score: homeScore, away_score: awayScore },
+      }))
+      return { success: true }
     } else {
       const { data, error } = await supabase
         .from('predictions')
         .insert({
           user_id: user.id,
-          match_id: matchId,
+          match_id: realMatchId,
           home_score: homeScore,
           away_score: awayScore,
         })
         .select()
         .single()
 
-      if (!error && data) {
-        setPredictions((prev) => ({ ...prev, [matchId]: data }))
+      if (error || !data) {
+        console.error('Error insertando predicción', error)
+        return { success: false, reason: 'supabase_error', error }
       }
+
+      setPredictions((prev) => ({ ...prev, [realMatchId]: data }))
+      return { success: true }
     }
   }
 
