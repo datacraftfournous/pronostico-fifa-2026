@@ -49,6 +49,10 @@ export default function Layout() {
         <NavLink to="/" end className={linkClass}>
           🏆 Ranking
         </NavLink>
+        
+        <NavLink to="/Predictions_original" end className={linkClass}>
+          📅 Prediction
+        </NavLink>
 
         <NavLink to="/daily-prediction" end className={linkClass}>
           📅 Daily Prediction
