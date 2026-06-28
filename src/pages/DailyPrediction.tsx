@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { getFlagUrl } from '../lib/flags'
+import { canEditAnyPrediction } from '../lib/scoring'
 
 function Flag({ team }) {
   const url = getFlagUrl(team)
@@ -70,10 +71,17 @@ export default function DailyPrediction() {
       .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
   }, [matches, dateFilter])
 
+  // 🔒 BLINDAJE: solo partidos ya bloqueados para edición (o finalizados)
+  // pueden aparecer en el reporte. Si todavía se puede editar, se oculta
+  // por completo para que nadie vea pronósticos ajenos antes de tiempo.
+  const visibleMatchesOfDay = useMemo(() => {
+    return matchesOfDay.filter(m => m.is_finished || !canEditAnyPrediction(m))
+  }, [matchesOfDay])
+
   const columnsMatches = useMemo(() => {
-    if (matchFilter === 'all') return matchesOfDay
-    return matchesOfDay.filter(m => String(m.id) === String(matchFilter))
-  }, [matchesOfDay, matchFilter])
+    if (matchFilter === 'all') return visibleMatchesOfDay
+    return visibleMatchesOfDay.filter(m => String(m.id) === String(matchFilter))
+  }, [visibleMatchesOfDay, matchFilter])
 
   useEffect(() => {
     setMatchFilter('all')
@@ -98,6 +106,8 @@ export default function DailyPrediction() {
   const colWidth = columnsMatches.length > 0
     ? `${Math.max(70 / columnsMatches.length, 8)}%`
     : 'auto'
+
+  const ocultos = matchesOfDay.length - visibleMatchesOfDay.length
 
   return (
     <div>
@@ -133,8 +143,8 @@ export default function DailyPrediction() {
             value={matchFilter}
             onChange={(e) => setMatchFilter(e.target.value)}
           >
-            <option value="all">Todos los partidos del día</option>
-            {matchesOfDay.map(m => (
+            <option value="all">Todos los partidos visibles del día</option>
+            {visibleMatchesOfDay.map(m => (
               <option key={m.id} value={m.id}>
                 {new Date(m.kickoff_at).toLocaleTimeString('es-CO', {
                   hour: '2-digit',
@@ -155,10 +165,18 @@ export default function DailyPrediction() {
         <span><strong>Pts</strong> = Puntos obtenidos</span>
       </div>
 
+      {ocultos > 0 && (
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.5rem 0' }}>
+          🔒 {ocultos} partido{ocultos > 1 ? 's' : ''} de este día aún {ocultos > 1 ? 'están' : 'está'} abierto{ocultos > 1 ? 's' : ''} a pronósticos y no se muestra{ocultos > 1 ? 'n' : ''} todavía.
+        </p>
+      )}
+
       {/* TABLA PIVOT */}
       <div className="card" style={{ padding: '0.75rem', overflowX: 'hidden' }}>
         {columnsMatches.length === 0 ? (
-          <div style={{ padding: 20 }}>No hay partidos para los filtros seleccionados.</div>
+          <div style={{ padding: 20 }}>
+            No hay partidos visibles para los filtros seleccionados (los partidos abiertos a pronóstico se ocultan hasta que cierren).
+          </div>
         ) : (
           <table className="pivot-table">
             <colgroup>
