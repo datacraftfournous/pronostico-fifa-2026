@@ -1,5 +1,6 @@
 import { toZonedTime } from 'date-fns-tz'
-import { isBefore, subHours } from 'date-fns'
+//import { isBefore, subHours } from 'date-fns'
+import { isBefore, subMinutes } from 'date-fns' 
 
 export const COLOMBIA_TZ = 'America/Bogota'
 
@@ -58,7 +59,8 @@ export function canEditKnockoutPrediction(match) {
   const dateStr = match.kickoff_at || match.match_date
   if (!dateStr) return true
   const kickoff = kickoffInColombia(dateStr)
-  const limite = subHours(kickoff, 1)
+  // const limite = subHours(kickoff, 1)
+  const limite = subMinutes(kickoff, 1)
   const now = nowInColombia()
   return isBefore(now, limite)
 }

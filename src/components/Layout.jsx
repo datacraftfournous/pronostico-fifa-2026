@@ -51,7 +51,7 @@ export default function Layout() {
         </NavLink>
         
         <NavLink to="/Predictions" end className={linkClass}>
-          📅 Prediction
+          🎯 Prediction
         </NavLink>
 
         <NavLink to="/daily-prediction" end className={linkClass}>
@@ -59,11 +59,11 @@ export default function Layout() {
         </NavLink>
 
         <NavLink to="/analisis" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
-  📈    Análisis
+          📈 Analysis
         </NavLink>
 
         <NavLink to="/reglas" className={linkClass}>
-          📋 Reglas
+          📋 Rules
         </NavLink>
 
         {isAdmin && (
