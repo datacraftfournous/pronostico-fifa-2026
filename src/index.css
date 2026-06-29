@@ -295,6 +295,9 @@ h1, h2, h3, .title-font {
 }
 
 .badge-pendiente { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); }
+/* Pegar esta línea justo debajo de .badge-pendiente en tu archivo CSS */
+
+.badge-esperando_resultado { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); }
 .badge-en_juego { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
 .badge-finalizado { background: rgba(0, 200, 83, 0.2); color: var(--green); }
 
