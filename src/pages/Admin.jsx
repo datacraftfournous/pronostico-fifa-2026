@@ -154,13 +154,16 @@ export default function Admin() {
     // de alguna sesión anterior, los puntos siempre se calculan contra el
     // resultado real que de verdad está en la base de datos.
     let erroresCalculo = 0
+    let fallosVerificacion = []
+
     for (const pred of predictions || []) {
-      const predHome = parseInt(pred.home_score, 10)
-      const predAway = parseInt(pred.away_score, 10)
+      let predHome = parseInt(pred.home_score, 10)
+      let predAway = parseInt(pred.away_score, 10)
 
       if (Number.isNaN(predHome) || Number.isNaN(predAway)) {
         erroresCalculo++
-        continue
+        predHome = Number.isNaN(predHome) ? 0 : predHome
+        predAway = Number.isNaN(predAway) ? 0 : predAway
       }
 
       const points = calcularPuntosAny(
@@ -171,17 +174,39 @@ export default function Admin() {
         updatedMatch
       )
 
-      await supabase
+      const { data: savedRow, error: pointsError } = await supabase
         .from('predictions')
         .update({ points })
         .eq('id', pred.id)
+        .select()
+        .single()
+
+      if (pointsError || !savedRow) {
+        console.error('Error actualizando puntos de predicción', pred.id, pointsError)
+        fallosVerificacion.push(`pred ${pred.id}: error al guardar`)
+        continue
+      }
+
+      // Verificación dura: confirmamos que el valor que quedó en la base
+      // es el mismo que acabamos de calcular. Si no coincide, lo reportamos
+      // en vez de asumir que todo salió bien.
+      if (Number(savedRow.points) !== Number(points)) {
+        fallosVerificacion.push(
+          `pred ${pred.id}: calculado ${points} pero quedó guardado ${savedRow.points}`
+        )
+      }
     }
 
-    showMsg(
-      erroresCalculo > 0
-        ? `Resultado guardado para ${updatedMatch.home_team} ${updatedMatch.home_score}-${updatedMatch.away_score} ${updatedMatch.away_team} (id ${updatedMatch.id}). ${erroresCalculo} predicción(es) con datos inválidos no se pudieron puntuar. Se actualizaron ${(predictions || []).length - erroresCalculo} predicciones.`
-        : `Resultado guardado para ${updatedMatch.home_team} ${updatedMatch.home_score}-${updatedMatch.away_score} ${updatedMatch.away_team} (id ${updatedMatch.id}). Se recalcularon ${(predictions || []).length} predicciones.`
-    )
+    if (fallosVerificacion.length > 0) {
+      setError(
+        `Resultado guardado para ${updatedMatch.home_team} ${updatedMatch.home_score}-${updatedMatch.away_score} ${updatedMatch.away_team}, ` +
+        `pero ${fallosVerificacion.length} predicción(es) no se actualizaron correctamente: ${fallosVerificacion.join(' | ')}`
+      )
+    } else {
+      showMsg(
+        `Resultado guardado para ${updatedMatch.home_team} ${updatedMatch.home_score}-${updatedMatch.away_score} ${updatedMatch.away_team} (id ${updatedMatch.id}). Se recalcularon y verificaron ${(predictions || []).length} predicciones.`
+      )
+    }
     setResultMatchId('')
     setResultHome('')
     setResultAway('')
