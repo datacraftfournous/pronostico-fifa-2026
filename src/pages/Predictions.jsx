@@ -87,7 +87,6 @@ export default function Predictions() {
         .update({
           home_score: homeScore,
           away_score: awayScore,
-          updated_at: new Date().toISOString(),
         })
         .eq('id', existing.id)
 
