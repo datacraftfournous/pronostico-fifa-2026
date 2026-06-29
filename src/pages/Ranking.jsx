@@ -2,12 +2,29 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { calcularPremios } from '../lib/scoring'
+
+// ───── Configuración del bote ─────
+// 15 jugadores × $20.000 cada uno = $300.000
+const TOTAL_JUGADORES = 15
+const APUESTA_POR_JUGADOR = 20000
+const BOTE_TOTAL = TOTAL_JUGADORES * APUESTA_POR_JUGADOR
+const PORCENTAJES_PREMIO = [0.5, 0.3, 0.2] // 1°, 2°, 3°
 
 function medalForRank(rank) {
   if (rank === 1) return '🥇'
   if (rank === 2) return '🥈'
   if (rank === 3) return '🥉'
   return rank
+}
+
+function formatCOP(valor) {
+  return valor.toLocaleString('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
 }
 
 export default function Ranking() {
@@ -40,6 +57,18 @@ export default function Ranking() {
     }
   }
 
+  // Premios calculados con manejo de empates (regla estándar de quinielas:
+  // si varios empatan y ocupan varios puestos premiados, se suman esos
+  // porcentajes y se dividen en partes iguales entre los empatados).
+  const premiosPorId = (() => {
+    const premios = calcularPremios(standings, BOTE_TOTAL, PORCENTAJES_PREMIO)
+    const map = {}
+    for (const p of premios) {
+      map[p.id] = { puesto: p.puesto, premio: p.premio }
+    }
+    return map
+  })()
+
   function exportPDF() {
     const doc = new jsPDF()
 
@@ -53,14 +82,24 @@ export default function Ranking() {
       28
     )
 
+    doc.text(
+      `Bote total: ${formatCOP(BOTE_TOTAL)} (${TOTAL_JUGADORES} jugadores x ${formatCOP(APUESTA_POR_JUGADOR)})`,
+      14,
+      35
+    )
+
     autoTable(doc, {
-      startY: 40,
-      head: [['Posición', 'Participante', 'Puntos']],
-      body: standings.map((player, index) => [
-        index + 1,
-        player.display_name,
-        player.total,
-      ]),
+      startY: 45,
+      head: [['Posición', 'Participante', 'Puntos', 'Premio']],
+      body: standings.map((player, index) => {
+        const premioInfo = premiosPorId[player.id]
+        return [
+          premioInfo ? premioInfo.puesto : index + 1,
+          player.display_name,
+          player.total,
+          premioInfo ? formatCOP(premioInfo.premio) : '—',
+        ]
+      }),
       styles: {
         fontSize: 10,
       },
@@ -88,7 +127,7 @@ export default function Ranking() {
       <h2 className="page-title">🏆 Ranking</h2>
 
       <p className="page-subtitle">
-        Clasificación general de la polla
+        Clasificación general de la polla · Bote total: {formatCOP(BOTE_TOTAL)} ({TOTAL_JUGADORES} jugadores × {formatCOP(APUESTA_POR_JUGADOR)})
       </p>
 
       <div
@@ -119,37 +158,46 @@ export default function Ranking() {
               <th>#</th>
               <th>Participante</th>
               <th>Puntos</th>
+              <th>Premio</th>
             </tr>
           </thead>
 
           <tbody>
-            {standings.map((player, index) => (
-              <tr key={player.id}>
-                <td className="rank-medal">
-                  {medalForRank(index + 1)}
-                </td>
+            {standings.map((player, index) => {
+              const premioInfo = premiosPorId[player.id]
 
-                <td>
-                  {player.display_name}
+              return (
+                <tr key={player.id}>
+                  <td className="rank-medal">
+                    {medalForRank(premioInfo ? premioInfo.puesto : index + 1)}
+                  </td>
 
-                  {player.role === 'admin' && (
-                    <span
-                      style={{
-                        marginLeft: '0.5rem',
-                        fontSize: '0.75rem',
-                        color: 'var(--gold)',
-                      }}
-                    >
-                      (Admin)
-                    </span>
-                  )}
-                </td>
+                  <td>
+                    {player.display_name}
 
-                <td className="rank-points">
-                  {player.total}
-                </td>
-              </tr>
-            ))}
+                    {player.role === 'admin' && (
+                      <span
+                        style={{
+                          marginLeft: '0.5rem',
+                          fontSize: '0.75rem',
+                          color: 'var(--gold)',
+                        }}
+                      >
+                        (Admin)
+                      </span>
+                    )}
+                  </td>
+
+                  <td className="rank-points">
+                    {player.total}
+                  </td>
+
+                  <td className="rank-points" style={{ color: premioInfo ? 'var(--green)' : 'var(--text-muted)' }}>
+                    {premioInfo ? formatCOP(premioInfo.premio) : '—'}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
