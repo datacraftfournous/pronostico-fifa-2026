@@ -35,35 +35,64 @@ export default function DailyPrediction() {
   }, [])
 
   async function loadData() {
-    setLoading(true)
-    try {
-      const [{ data: matchData }, { data: predData }, { data: profileData }] = await Promise.all([
-        supabase.from('matches').select('*').order('kickoff_at', { ascending: true }),
-        supabase.from('predictions').select('*'),
-        supabase.from('profiles').select('*').order('username'),
-      ])
+  setLoading(true)
 
-      setMatches(matchData || [])
-      setPredictions(predData || [])
-      setProfiles(profileData || [])
+  try {
+    // 1. Partidos y perfiles
+    const [{ data: matchData }, { data: profileData }] = await Promise.all([
+      supabase
+        .from('matches')
+        .select('*')
+        .order('kickoff_at', { ascending: true }),
 
-      const today = todayInColombia()
-      const dates = [...new Set((matchData || []).map(m => getLocalDate(m.kickoff_at)))].sort()
+      supabase
+        .from('profiles')
+        .select('*')
+        .order('username'),
+    ])
 
-      if (dates.includes(today)) {
-        setDateFilter(today)
-      } else if (dates.length > 0) {
-        const futureDate = dates.find(d => d >= today)
-        setDateFilter(futureDate || dates[dates.length - 1])
-      }
-    } finally {
-      setLoading(false)
+    // 2. Traer TODAS las predicciones por bloques de 1000
+    let allPredictions = []
+    let from = 0
+    const pageSize = 1000
+
+    while (true) {
+      const { data, error } = await supabase
+        .from('predictions')
+        .select('*')
+        .range(from, from + pageSize - 1)
+
+      if (error) throw error
+
+      if (!data || data.length === 0) break
+
+      allPredictions.push(...data)
+
+      if (data.length < pageSize) break
+
+      from += pageSize
     }
-  }
 
-  const availableDates = useMemo(() => {
-    return [...new Set(matches.map(m => getLocalDate(m.kickoff_at)))].sort()
-  }, [matches])
+    setMatches(matchData || [])
+    setProfiles(profileData || [])
+    setPredictions(allPredictions)
+
+    const today = todayInColombia()
+    const dates = [...new Set((matchData || []).map(m => getLocalDate(m.kickoff_at)))].sort()
+
+    if (dates.includes(today)) {
+      setDateFilter(today)
+    } else if (dates.length > 0) {
+      const futureDate = dates.find(d => d >= today)
+      setDateFilter(futureDate || dates[dates.length - 1])
+    }
+  } finally {
+    setLoading(false)
+  }
+}
+    const availableDates = useMemo(() => {
+      return [...new Set(matches.map(m => getLocalDate(m.kickoff_at)))].sort()
+    }, [matches])
 
   const matchesOfDay = useMemo(() => {
     return matches
