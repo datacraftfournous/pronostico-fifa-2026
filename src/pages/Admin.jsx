@@ -179,8 +179,8 @@ export default function Admin() {
 
     showMsg(
       erroresCalculo > 0
-        ? `Resultado guardado. ${erroresCalculo} predicción(es) con datos inválidos no se pudieron puntuar.`
-        : 'Resultado guardado y puntos calculados para todos los participantes'
+        ? `Resultado guardado para ${updatedMatch.home_team} ${updatedMatch.home_score}-${updatedMatch.away_score} ${updatedMatch.away_team} (id ${updatedMatch.id}). ${erroresCalculo} predicción(es) con datos inválidos no se pudieron puntuar. Se actualizaron ${(predictions || []).length - erroresCalculo} predicciones.`
+        : `Resultado guardado para ${updatedMatch.home_team} ${updatedMatch.home_score}-${updatedMatch.away_score} ${updatedMatch.away_team} (id ${updatedMatch.id}). Se recalcularon ${(predictions || []).length} predicciones.`
     )
     setResultMatchId('')
     setResultHome('')
