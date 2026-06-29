@@ -25,6 +25,7 @@ export default function Admin() {
   const [resultMatchId, setResultMatchId] = useState('')
   const [resultHome, setResultHome] = useState('')
   const [resultAway, setResultAway] = useState('')
+  const [showFinished, setShowFinished] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -109,8 +110,6 @@ export default function Admin() {
     const awayScore = parseInt(resultAway, 10)
     const matchId = resultMatchId
 
-    // Necesitamos el objeto match completo (no solo el id) para que
-    // calcularPuntosAny sepa qué fórmula aplicar (grupos vs eliminatoria).
     const match = matches.find((m) => String(m.id) === String(matchId))
 
     if (!match) {
@@ -118,7 +117,12 @@ export default function Admin() {
       return
     }
 
-    const { error: updateError } = await supabase
+    if (Number.isNaN(homeScore) || Number.isNaN(awayScore)) {
+      setError('El resultado ingresado no es válido')
+      return
+    }
+
+    const { data: updatedMatch, error: updateError } = await supabase
       .from('matches')
       .update({
         home_score: homeScore,
@@ -126,32 +130,58 @@ export default function Admin() {
         is_finished: true,
       })
       .eq('id', matchId)
+      .select()
+      .single()
 
-    if (updateError) {
-      setError(`Error guardando resultado: ${updateError.message}`)
+    if (updateError || !updatedMatch) {
+      setError(`Error guardando resultado: ${updateError?.message || 'sin datos'}`)
       return
     }
 
-    const { data: predictions } = await supabase
+    const { data: predictions, error: predError } = await supabase
       .from('predictions')
       .select('*')
       .eq('match_id', matchId)
 
+    if (predError) {
+      setError(`Error leyendo predicciones: ${predError.message}`)
+      return
+    }
+
+    // Usamos updatedMatch (lo que QUEDÓ guardado en la base, recién leído)
+    // en vez de las variables locales homeScore/awayScore o el "match" de
+    // estado viejo. Así, sin importar si el formulario quedó desincronizado
+    // de alguna sesión anterior, los puntos siempre se calculan contra el
+    // resultado real que de verdad está en la base de datos.
+    let erroresCalculo = 0
     for (const pred of predictions || []) {
+      const predHome = parseInt(pred.home_score, 10)
+      const predAway = parseInt(pred.away_score, 10)
+
+      if (Number.isNaN(predHome) || Number.isNaN(predAway)) {
+        erroresCalculo++
+        continue
+      }
+
       const points = calcularPuntosAny(
-        parseInt(pred.home_score, 10),
-        parseInt(pred.away_score, 10),
-        homeScore,
-        awayScore,
-        match
+        predHome,
+        predAway,
+        updatedMatch.home_score,
+        updatedMatch.away_score,
+        updatedMatch
       )
+
       await supabase
         .from('predictions')
         .update({ points })
         .eq('id', pred.id)
     }
 
-    showMsg('Resultado guardado y puntos calculados para todos los participantes')
+    showMsg(
+      erroresCalculo > 0
+        ? `Resultado guardado. ${erroresCalculo} predicción(es) con datos inválidos no se pudieron puntuar.`
+        : 'Resultado guardado y puntos calculados para todos los participantes'
+    )
     setResultMatchId('')
     setResultHome('')
     setResultAway('')
@@ -159,6 +189,7 @@ export default function Admin() {
   }
 
   const pendingMatches = matches.filter((m) => !m.is_finished)
+  const finishedMatches = matches.filter((m) => m.is_finished)
 
   return (
     <div>
@@ -189,16 +220,43 @@ export default function Admin() {
           <h2>Marcar resultado real</h2>
           <form onSubmit={handleSetResult}>
             <div className="form-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={showFinished}
+                  onChange={(e) => {
+                    setShowFinished(e.target.checked)
+                    setResultMatchId('')
+                    setResultHome('')
+                    setResultAway('')
+                  }}
+                  style={{ marginRight: '0.5rem' }}
+                />
+                Recalcular un partido ya finalizado
+              </label>
+            </div>
+            <div className="form-group">
               <label>Partido</label>
               <select
                 value={resultMatchId}
-                onChange={(e) => setResultMatchId(e.target.value)}
+                onChange={(e) => {
+                  const id = e.target.value
+                  setResultMatchId(id)
+                  const m = matches.find((mm) => String(mm.id) === String(id))
+                  // Al recalcular, precargamos el resultado actual para que
+                  // el admin lo vea y lo edite, en vez de partir de inputs vacíos.
+                  if (m && showFinished) {
+                    setResultHome(String(m.home_score ?? ''))
+                    setResultAway(String(m.away_score ?? ''))
+                  }
+                }}
                 required
               >
                 <option value="">Selecciona un partido</option>
-                {pendingMatches.map((m) => (
+                {(showFinished ? finishedMatches : pendingMatches).map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.home_team} vs {m.away_team} — {formatKickoffColombia(m.kickoff_at)}
+                    {showFinished ? ` (actual: ${m.home_score}-${m.away_score})` : ''}
                   </option>
                 ))}
               </select>
