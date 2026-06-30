@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { calcularPremios } from '../lib/scoring'
+
 
 // ───── Configuración del bote ─────
 // 15 jugadores × $20.000 cada uno = $300.000
@@ -44,10 +44,10 @@ function formatCOP(valor) {
 function calcularPosiciones(standings) {
   let puestoActual = 1
 
-  return rankingConPuestos.map((player) => {
+  return standings.map((player, index) => {
     if (
       index > 0 &&
-      parseFloat(player.total) !== parseFloat(standings[index - 1].total)
+      Number(player.total) !== Number(standings[index - 1].total)
     ) {
       puestoActual = index + 1
     }
@@ -58,7 +58,6 @@ function calcularPosiciones(standings) {
     }
   })
 }
-
 export default function Ranking() {
   const [standings, setStandings] = useState([])
   const [loading, setLoading] = useState(true)
@@ -90,27 +89,6 @@ export default function Ranking() {
     }
   }
 
-  const rankingConPuestos = calcularPosiciones(standings)
-
-  // Premios calculados con manejo de empates
-  const premiosPorId = (() => {
-    const premios = calcularPremios(
-      standings,
-      BOTE_TOTAL,
-      PORCENTAJES_PREMIO
-    )
-
-    const map = {}
-
-    for (const p of premios) {
-      map[p.id] = {
-        puesto: p.puesto,
-        premio: p.premio,
-      }
-    }
-
-    return map
-  })()
 
   function exportPDF() {
     const doc = new jsPDF()
