@@ -27,6 +27,38 @@ function formatCOP(valor) {
   })
 }
 
+// Calcula posiciones reales respetando empates.
+// Ejemplo:
+// 133
+// 133
+// 133
+// 131
+// 130
+//
+// Resultado:
+// 1
+// 1
+// 1
+// 4
+// 5
+function calcularPosiciones(standings) {
+  let puestoActual = 1
+
+  return standings.map((player, index) => {
+    if (
+      index > 0 &&
+      Number(player.total) < Number(standings[index - 1].total)
+    ) {
+      puestoActual = index + 1
+    }
+
+    return {
+      ...player,
+      puesto: puestoActual,
+    }
+  })
+}
+
 export default function Ranking() {
   const [standings, setStandings] = useState([])
   const [loading, setLoading] = useState(true)
@@ -57,15 +89,25 @@ export default function Ranking() {
     }
   }
 
-  // Premios calculados con manejo de empates (regla estándar de quinielas:
-  // si varios empatan y ocupan varios puestos premiados, se suman esos
-  // porcentajes y se dividen en partes iguales entre los empatados).
+  const rankingConPuestos = calcularPosiciones(standings)
+
+  // Premios calculados con manejo de empates
   const premiosPorId = (() => {
-    const premios = calcularPremios(standings, BOTE_TOTAL, PORCENTAJES_PREMIO)
+    const premios = calcularPremios(
+      standings,
+      BOTE_TOTAL,
+      PORCENTAJES_PREMIO
+    )
+
     const map = {}
+
     for (const p of premios) {
-      map[p.id] = { puesto: p.puesto, premio: p.premio }
+      map[p.id] = {
+        puesto: p.puesto,
+        premio: p.premio,
+      }
     }
+
     return map
   })()
 
@@ -91,10 +133,11 @@ export default function Ranking() {
     autoTable(doc, {
       startY: 45,
       head: [['Posición', 'Participante', 'Puntos', 'Premio']],
-      body: standings.map((player, index) => {
+      body: rankingConPuestos.map((player) => {
         const premioInfo = premiosPorId[player.id]
+
         return [
-          premioInfo ? premioInfo.puesto : index + 1,
+          premioInfo ? premioInfo.puesto : player.puesto,
           player.display_name,
           player.total,
           premioInfo ? formatCOP(premioInfo.premio) : '—',
@@ -127,7 +170,9 @@ export default function Ranking() {
       <h2 className="page-title">🏆 Ranking</h2>
 
       <p className="page-subtitle">
-        Clasificación general de la polla · Bote total: {formatCOP(BOTE_TOTAL)} ({TOTAL_JUGADORES} jugadores × {formatCOP(APUESTA_POR_JUGADOR)})
+        Clasificación general de la polla · Bote total:{' '}
+        {formatCOP(BOTE_TOTAL)} ({TOTAL_JUGADORES} jugadores ×{' '}
+        {formatCOP(APUESTA_POR_JUGADOR)})
       </p>
 
       <div
@@ -163,13 +208,17 @@ export default function Ranking() {
           </thead>
 
           <tbody>
-            {standings.map((player, index) => {
+            {rankingConPuestos.map((player) => {
               const premioInfo = premiosPorId[player.id]
 
               return (
                 <tr key={player.id}>
                   <td className="rank-medal">
-                    {medalForRank(premioInfo ? premioInfo.puesto : index + 1)}
+                    {medalForRank(
+                      premioInfo
+                        ? premioInfo.puesto
+                        : player.puesto
+                    )}
                   </td>
 
                   <td>
@@ -192,8 +241,17 @@ export default function Ranking() {
                     {player.total}
                   </td>
 
-                  <td className="rank-points" style={{ color: premioInfo ? 'var(--green)' : 'var(--text-muted)' }}>
-                    {premioInfo ? formatCOP(premioInfo.premio) : '—'}
+                  <td
+                    className="rank-points"
+                    style={{
+                      color: premioInfo
+                        ? 'var(--green)'
+                        : 'var(--text-muted)',
+                    }}
+                  >
+                    {premioInfo
+                      ? formatCOP(premioInfo.premio)
+                      : '—'}
                   </td>
                 </tr>
               )
