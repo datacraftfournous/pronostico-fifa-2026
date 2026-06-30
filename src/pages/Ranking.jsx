@@ -81,6 +81,7 @@
           return
         }
 
+        console.log(data)
         setStandings(data || [])
       } catch (err) {
         console.error(err)
