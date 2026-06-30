@@ -44,10 +44,10 @@ function formatCOP(valor) {
 function calcularPosiciones(standings) {
   let puestoActual = 1
 
-  return standings.map((player, index) => {
+  return rankingConPuestos.map((player) => {
     if (
       index > 0 &&
-      Number(player.total) < Number(standings[index - 1].total)
+      parseFloat(player.total) !== parseFloat(standings[index - 1].total)
     ) {
       puestoActual = index + 1
     }
@@ -62,6 +62,7 @@ function calcularPosiciones(standings) {
 export default function Ranking() {
   const [standings, setStandings] = useState([])
   const [loading, setLoading] = useState(true)
+  const rankingConPuestos = calcularPosiciones(standings)
 
   useEffect(() => {
     loadRanking()
@@ -214,11 +215,7 @@ export default function Ranking() {
               return (
                 <tr key={player.id}>
                   <td className="rank-medal">
-                    {medalForRank(
-                      premioInfo
-                        ? premioInfo.puesto
-                        : player.puesto
-                    )}
+                    {medalForRank(player.puesto)}
                   </td>
 
                   <td>
