@@ -82,7 +82,9 @@
         }
 
         console.log(data)
-        setStandings(data || [])
+        setStandings(
+  (data || []).filter(player => player.has_paid)
+)
       } catch (err) {
         console.error(err)
       } finally {
