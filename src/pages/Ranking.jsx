@@ -63,6 +63,9 @@
     const [loading, setLoading] = useState(true)
     const rankingConPuestos = calcularPosiciones(standings)
 
+const jugadoresPagos = rankingConPuestos.filter(p => p.has_paid)
+const jugadoresPendientes = rankingConPuestos.filter(p => !p.has_paid)
+
     useEffect(() => {
       loadRanking()
     }, [])
@@ -82,9 +85,7 @@
         }
 
         console.log(data)
-        setStandings(
-  (data || []).filter(player => player.has_paid)
-)
+      setStandings(data || [])
       } catch (err) {
         console.error(err)
       } finally {
@@ -115,7 +116,7 @@
       autoTable(doc, {
     startY: 45,
     head: [['Posición', 'Participante', 'Puntos', 'Premio']],
-    body: rankingConPuestos.map((player) => [
+    body: jugadoresPagos.map((player) => [
       player.puesto,
       player.display_name,
       player.total,
@@ -230,3 +231,44 @@
       </div>
     )
   }
+
+
+  <div className="card" style={{ marginTop: '2rem' }}>
+  <h3>💰 Estado de pagos</h3>
+
+  <div className="admin-grid admin-grid-2">
+
+    <div>
+      <h4 style={{ color: 'var(--green)' }}>
+        ✅ Han pagado ({jugadoresPagos.length})
+      </h4>
+
+      <table className="ranking-table">
+        <tbody>
+          {jugadoresPagos.map(p => (
+            <tr key={p.id}>
+              <td>{p.display_name}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h4 style={{ color: '#ef4444' }}>
+        ❌ Pendientes ({jugadoresPendientes.length})
+      </h4>
+
+      <table className="ranking-table">
+        <tbody>
+          {jugadoresPendientes.map(p => (
+            <tr key={p.id}>
+              <td>{p.display_name}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
