@@ -66,16 +66,20 @@ export default function Ranking() {
   // 'general' = clasificación de todos los jugadores por puntos
   const [vista, setVista] = useState('pagos')
 
+  // Única fuente de verdad: el puesto se calcula SIEMPRE sobre TODOS
+  // los jugadores (pagaron o no), porque todos compitieron por igual.
+  // "standings" ya viene ordenado por total desc desde Supabase.
   const rankingConPuestos = calcularPosiciones(standings)
 
+  // Clasificación general: todos, con su puesto real.
+  const clasificacionGeneral = rankingConPuestos
+
+  // Ranking de pagos: mismo puesto real, pero solo se muestran
+  // (y reciben premio) quienes ya pagaron. Si alguien sin pagar
+  // ocupa el puesto 2, verás 1° y luego 3° aquí — es intencional,
+  // refleja su posición real en el torneo.
   const jugadoresPagos = rankingConPuestos.filter(p => p.has_paid)
   const jugadoresPendientes = rankingConPuestos.filter(p => !p.has_paid)
-
-  // Clasificación general: TODOS los jugadores, recalculando puesto
-  // solo entre ellos (independiente de si pagaron o no).
-  const clasificacionGeneral = calcularPosiciones(
-    [...standings].sort((a, b) => Number(b.total) - Number(a.total))
-  )
 
   useEffect(() => {
     loadRanking()
@@ -204,8 +208,11 @@ export default function Ranking() {
             marginBottom: '1rem',
           }}
         >
-          ⚠️ {jugadoresPendientes.length} jugador(es) sin pago registrado, no
-          aparecen en esta lista. Puedes verlos en "Clasificación General".
+          ⚠️ {jugadoresPendientes.length} jugador(es) sin pago registrado no
+          aparecen en esta lista (no reciben premio), pero sus puntos sí
+          cuentan para el puesto real de los demás — por eso puedes ver
+          saltos en la numeración (ej. 1°, luego 3°). Míralos todos en
+          "Clasificación General".
         </p>
       )}
 
