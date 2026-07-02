@@ -1161,3 +1161,92 @@ h1, h2, h3, .title-font {
   max-height: 240px;
   object-fit: cover;
 }
+
+/* ================= HEADER NUEVO ================= */
+
+.app-header{
+    display:flex;
+    padding:0;
+    background:#081b2f;
+    border-bottom:2px solid var(--gold);
+}
+
+.header-left{
+    width:340px;
+    flex-shrink:0;
+}
+
+.hero-banner-image{
+    width:100%;
+    height:180px;
+    display:block;
+    object-fit:cover;
+}
+
+.header-right{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+
+.header-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 28px 12px 28px;
+}
+
+.logo{
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
+
+.brand-logo{
+    width:70px;
+    height:70px;
+    border-radius:12px;
+    object-fit:cover;
+}
+
+.logo h1{
+    font-size:3rem;
+    line-height:1;
+}
+
+.brand-subtitle{
+    font-size:1.2rem;
+    color:#b6c3d3;
+}
+
+.brand-company{
+    margin-top:4px;
+    font-size:1rem;
+    color:#19b5ff;
+    font-weight:700;
+}
+
+.header-user{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    font-size:1.3rem;
+}
+
+.competition-banner{
+
+    background:rgba(255,215,0,.08);
+
+    border-top:1px solid rgba(255,215,0,.15);
+
+    text-align:center;
+
+    color:var(--gold);
+
+    font-weight:700;
+
+    font-size:1.4rem;
+
+    padding:14px;
+}

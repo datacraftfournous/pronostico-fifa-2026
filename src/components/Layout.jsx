@@ -9,6 +9,7 @@ export default function Layout() {
   const { profile, isAdmin, signOut, user } = useAuth()
   const location = useLocation()
 
+
   // Registra cada cambio de ruta como una "vista de página" en Supabase.
   // Layout nunca se desmonta entre navegaciones (envuelve el <Outlet/>),
   // así que este efecto se dispara exactamente una vez por cada
@@ -29,53 +30,66 @@ export default function Layout() {
 
   return (
     <div className="app-layout">
-      <header className="app-header">
+     
+     <header className="app-header">
 
-        <div className="logo">
-          <img
-            src={logoTF}
-            alt="Tiburón Flag"
-            className="brand-logo"
-          />
+  <div className="header-left">
+    <img
+      src={worldCupBanner}
+      alt="World Cup Banner"
+      className="hero-banner-image"
+    />
+  </div>
 
-          <div>
-            <h1>FLAGSCORE</h1>
+  <div className="header-right">
 
-            <div className="brand-subtitle">
-              Sports Predictions & Analytics
-            </div>
+    <div className="header-top">
 
-            <div className="brand-company">
-              by Tiburón Flag
-            </div>
+      <div className="logo">
 
-
-          </div>
-        </div >
-
-
-        <div className="header-user">
-          <span>
-            Hola, <span className="username">{profile?.display_name}</span>
-          </span>
-          <button className="btn-logout" onClick={signOut}>
-            Salir
-          </button>
-        </div>
-      </header >
-
-      <div className="competition-banner">
-        🏆 FIFA World Cup 2026
-      </div>
-
-
-      <div className="hero-banner">
         <img
-          src={worldCupBanner}
-          alt="World Cup Banner"
-          className="hero-banner-image"
+          src={logoTF}
+          alt="Tiburón Flag"
+          className="brand-logo"
         />
+
+        <div>
+          <h1>FLAGSCORE</h1>
+
+          <div className="brand-subtitle">
+            Sports Predictions & Analytics
+          </div>
+
+          <div className="brand-company">
+            by Tiburón Flag
+          </div>
+        </div>
+
       </div>
+
+      <div className="header-user">
+        <span>
+          Hola, <span className="username">{profile?.display_name}</span>
+        </span>
+
+        <button
+          className="btn-logout"
+          onClick={signOut}
+        >
+          Salir
+        </button>
+      </div>
+
+    </div>
+
+    <div className="competition-banner">
+      🏆 FIFA World Cup 2026
+    </div>
+
+  </div>
+
+</header>
+
 
       <nav className="app-nav">
         <NavLink to="/" end className={linkClass}>
