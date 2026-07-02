@@ -1313,7 +1313,7 @@ h3,
 
   .competition-banner {
     margin-bottom: 12px;
-    margin-top: -16px;
+    margin-top: 0px;
     font-size: 0.85rem;
     padding: 10px 20px;
     text-align: center;
