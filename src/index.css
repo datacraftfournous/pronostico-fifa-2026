@@ -1087,16 +1087,15 @@ h3,
   border-bottom: 2px solid #ffd700;
 }
 
-.hero-banner-image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.hero-banner-image{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
 
-  .hero-banner-image {
-    object-position: center 35%;
-  }
+    /* Ajusta la posición de la imagen */
+    object-position:center 35%;
 }
 
 .app-header::before {
@@ -1179,16 +1178,20 @@ h3,
   font-weight: 700;
 }
 
-.competition-banner {
-  align-self: center;
-  margin-bottom: 24px;
-  padding: 12px 36px;
-  border-radius: 40px;
-  background: rgba(0, 0, 0, .55);
-  border: 1px solid rgba(255, 215, 0, .7);
-  backdrop-filter: blur(10px);
-  color: #ffd700;
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: 2px;
+.competition-banner{
+    align-self:center;
+    margin-bottom:50px;   /* antes 24px */
+
+    padding:12px 36px;
+    border-radius:40px;
+
+    background:rgba(0,0,0,.55);
+    border:1px solid rgba(255,215,0,.7);
+
+    backdrop-filter:blur(10px);
+
+    color:#ffd700;
+    font-size:1.25rem;
+    font-weight:700;
+    letter-spacing:2px;
 }
