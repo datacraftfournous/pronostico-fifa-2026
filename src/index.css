@@ -32,7 +32,10 @@ body {
   line-height: 1.5;
 }
 
-h1, h2, h3, .title-font {
+h1,
+h2,
+h3,
+.title-font {
   font-family: 'Bebas Neue', sans-serif;
   letter-spacing: 0.05em;
 }
@@ -57,7 +60,9 @@ h1, h2, h3, .title-font {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .app-layout {
@@ -67,15 +72,13 @@ h1, h2, h3, .title-font {
 }
 
 .app-header {
-  background: linear-gradient(
-    90deg,
-    #050b16 0%,
-    #071a30 40%,
-    #081d2b 70%,
-    #0a1628 100%
-  );
+  background: linear-gradient(90deg,
+      #050b16 0%,
+      #071a30 40%,
+      #081d2b 70%,
+      #0a1628 100%);
 
-  border-bottom: 1px solid rgba(0,191,255,.25);
+  border-bottom: 1px solid rgba(0, 191, 255, .25);
 
   padding: 0.9rem 2rem;
 
@@ -85,6 +88,7 @@ h1, h2, h3, .title-font {
 
   min-height: 85px;
 }
+
 .logo {
   display: flex;
   align-items: center;
@@ -100,11 +104,9 @@ h1, h2, h3, .title-font {
   line-height: 1;
   margin: 0;
 
-  background: linear-gradient(
-    90deg,
-    #ffffff,
-    #2ea8ff
-  );
+  background: linear-gradient(90deg,
+      #ffffff,
+      #2ea8ff);
 
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -150,7 +152,7 @@ h1, h2, h3, .title-font {
 .app-nav {
   background: #08111f;
 
-  border-bottom: 1px solid rgba(0,191,255,.15);
+  border-bottom: 1px solid rgba(0, 191, 255, .15);
 
   display: flex;
   gap: 1rem;
@@ -179,10 +181,11 @@ h1, h2, h3, .title-font {
 .nav-link.active {
   color: #2ea8ff;
 
-  background: rgba(46,168,255,.08);
+  background: rgba(46, 168, 255, .08);
 
   border-bottom: 2px solid #2ea8ff;
 }
+
 .app-main {
   flex: 1;
   padding: 1.5rem;
@@ -211,7 +214,7 @@ h1, h2, h3, .title-font {
   box-shadow: var(--shadow);
 }
 
-.card + .card {
+.card+.card {
   margin-top: 1rem;
 }
 
@@ -319,12 +322,27 @@ h1, h2, h3, .title-font {
   font-weight: 600;
 }
 
-.badge-pendiente { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); }
+.badge-pendiente {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--text-muted);
+}
+
 /* Pegar esta línea justo debajo de .badge-pendiente en tu archivo CSS */
 
-.badge-esperando_resultado { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); }
-.badge-en_juego { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-.badge-finalizado { background: rgba(0, 200, 83, 0.2); color: var(--green); }
+.badge-esperando_resultado {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--text-muted);
+}
+
+.badge-en_juego {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+}
+
+.badge-finalizado {
+  background: rgba(0, 200, 83, 0.2);
+  color: var(--green);
+}
 
 .ranking-table {
   width: 100%;
@@ -573,6 +591,7 @@ h1, h2, h3, .title-font {
   border-color: var(--green);
   color: var(--green);
 }
+
 .group-filter {
   display: flex;
   flex-wrap: nowrap;
@@ -614,7 +633,7 @@ h1, h2, h3, .title-font {
   padding: 0 1rem;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--text-muted);
   font-size: 0.9rem;
   font-weight: 600;
@@ -628,7 +647,7 @@ h1, h2, h3, .title-font {
 }
 
 .date-btn.active {
-  background: rgba(255,215,0,.15);
+  background: rgba(255, 215, 0, .15);
   border-color: var(--gold);
   color: var(--gold);
 }
@@ -769,7 +788,7 @@ h1, h2, h3, .title-font {
   display: table-cell;
 }
 
-.pivot-subheader > span {
+.pivot-subheader>span {
   display: inline-block;
   width: 32%;
   font-size: 0.6rem;
@@ -922,7 +941,7 @@ h1, h2, h3, .title-font {
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   font-size: 0.8rem;
 }
 
@@ -941,10 +960,21 @@ h1, h2, h3, .title-font {
   color: var(--text);
 }
 
-.c-green { color: var(--green); }
-.c-amber { color: var(--warning); }
-.c-red { color: var(--danger); }
-.c-purple { color: #a855f7; }
+.c-green {
+  color: var(--green);
+}
+
+.c-amber {
+  color: var(--warning);
+}
+
+.c-red {
+  color: var(--danger);
+}
+
+.c-purple {
+  color: #a855f7;
+}
 
 .analytics-score-box {
   background: var(--green);
@@ -1043,7 +1073,7 @@ h1, h2, h3, .title-font {
   display: flex;
   gap: 0.75rem;
   padding: 0.6rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .analytics-insight:last-child {
@@ -1065,7 +1095,7 @@ h1, h2, h3, .title-font {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   font-size: 0.85rem;
 }
 
@@ -1134,21 +1164,34 @@ h1, h2, h3, .title-font {
   color: #94a3b8;
 }
 
-.competition-banner {
-  background: rgba(255, 215, 0, 0.08);
-  border-bottom: 1px solid rgba(255, 215, 0, 0.25);
+.competition-banner{
 
-  color: var(--gold);
+    position:relative;
 
-  text-align: center;
+    z-index:3;
 
-  padding: 0.5rem;
+    align-self:center;
 
-  font-weight: 700;
+    margin-bottom:25px;
 
-  letter-spacing: 1px;
+    background:rgba(0,0,0,.45);
+
+    backdrop-filter:blur(8px);
+
+    border:1px solid rgba(255,215,0,.5);
+
+    border-radius:40px;
+
+    padding:14px 40px;
+
+    color:#FFD700;
+
+    font-size:1.7rem;
+
+    font-weight:800;
+
+    letter-spacing:2px;
 }
-
 
 
 .hero-banner-image {
@@ -1160,93 +1203,135 @@ h1, h2, h3, .title-font {
 
 /* ================= HEADER ================= */
 
-.app-header{
-    display:flex;
-    padding:0;
-    background:#081b2f;
-    border-bottom:2px solid var(--gold);
+.app-header {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  height: 420px;
+
+  background: none;
+
+  overflow: hidden;
 }
 
-.header-left{
-    width:420px;
-    flex-shrink:0;
+.header-left {
+  width: 420px;
+  flex-shrink: 0;
 }
 
-.hero-banner-image{
-    width:100%;
-    height:220px;
-    display:block;
-    object-fit:cover;
+.hero-banner-image {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: cover;
+
+  z-index: 1;
 }
 
-.header-right{
-    flex:1;
-    display:flex;
-    flex-direction:column;
+.header-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.header-top{
-    flex:1;
+.header-top {
 
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+  position: relative;
 
-    padding:25px 35px;
+  z-index: 3;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-start;
+
+  padding: 30px 45px;
 }
 
 .logo{
+
     display:flex;
-    align-items:center;
+
     gap:20px;
+
+    align-items:center;
+
+    background:none;
+
+    padding:0;
 }
 
-.brand-logo{
-    width:82px;
-    height:82px;
-    border-radius:14px;
-    object-fit:cover;
+.brand-logo {
+  width: 82px;
+  height: 82px;
+  border-radius: 14px;
+  object-fit: cover;
 }
 
 .logo h1{
-    font-size:3.3rem;
-    line-height:1;
+
+    text-shadow:
+        0 3px 10px rgba(0,0,0,.8);
 }
 
-.brand-subtitle{
-    font-size:1.15rem;
-    color:#b7c4d4;
-}
 
+.brand-subtitle,
 .brand-company{
-    margin-top:6px;
-    font-size:1rem;
-    color:#25b8ff;
-    font-weight:700;
+
+    text-shadow:
+        0 2px 8px rgba(0,0,0,.8);
 }
+
+
+
+
+
+
 
 .header-user{
-    display:flex;
-    align-items:center;
-    gap:18px;
-    font-size:1rem;
+
+    text-shadow:
+        0 2px 8px rgba(0,0,0,.8);
+}
+.competition-banner {
+
+  background: rgba(255, 215, 0, .08);
+
+  border-top: 1px solid rgba(255, 215, 0, .12);
+
+  color: var(--gold);
+
+  text-align: center;
+
+  padding: 14px;
+
+  font-size: 1.1rem;
+
+  font-weight: 700;
+
+  letter-spacing: 2px;
 }
 
-.competition-banner{
 
-    background:rgba(255,215,0,.08);
+.app-header::after {
 
-    border-top:1px solid rgba(255,215,0,.12);
+  content: "";
 
-    color:var(--gold);
+  position: absolute;
 
-    text-align:center;
+  inset: 0;
 
-    padding:14px;
+  background: linear-gradient(rgba(0, 0, 0, .20),
+      rgba(0, 0, 0, .20));
 
-    font-size:1.1rem;
-
-    font-weight:700;
-
-    letter-spacing:2px;
+  z-index: 2;
 }
