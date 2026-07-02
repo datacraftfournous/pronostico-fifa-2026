@@ -59,6 +59,33 @@ function calcularPosiciones(standings) {
   })
 }
 
+// Supabase/PostgREST limita cada consulta a 1000 filas por defecto.
+// Con 15 jugadores x hasta 104 partidos, "predictions" puede superar
+// ese límite fácilmente, así que paginamos con .range() hasta traer
+// TODAS las filas antes de calcular cualquier estadística.
+const SUPABASE_PAGE_SIZE = 1000
+
+async function fetchAllRows(table, columns) {
+  let allRows = []
+  let from = 0
+
+  while (true) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(columns)
+      .range(from, from + SUPABASE_PAGE_SIZE - 1)
+
+    if (error) throw error
+
+    allRows = allRows.concat(data || [])
+
+    if (!data || data.length < SUPABASE_PAGE_SIZE) break
+    from += SUPABASE_PAGE_SIZE
+  }
+
+  return allRows
+}
+
 // Orden cronológico de fases del torneo, para mostrar/ordenar consistentemente
 const ORDEN_FASES = [
   'Fase de grupos',
@@ -174,29 +201,14 @@ export default function Ranking() {
     try {
       setLoadingAnalisis(true)
 
-      const [predsRes, matchesRes, profilesRes] = await Promise.all([
-        supabase
-          .from('predictions')
-          .select('user_id, match_id, home_score, away_score'),
-        supabase
-          .from('matches')
-          .select('id, stage, home_score, away_score, is_finished'),
-        supabase
-          .from('profiles')
-          .select('id, display_name, has_paid'),
+      const [predsData, matchesData, profilesData] = await Promise.all([
+        fetchAllRows('predictions', 'user_id, match_id, home_score, away_score'),
+        fetchAllRows('matches', 'id, stage, home_score, away_score, is_finished'),
+        fetchAllRows('profiles', 'id, display_name, has_paid'),
       ])
 
-      if (predsRes.error) console.error(predsRes.error)
-      if (matchesRes.error) console.error(matchesRes.error)
-      if (profilesRes.error) console.error(profilesRes.error)
-      if (predsRes.error || matchesRes.error || profilesRes.error) return
-
       setStatsJugadores(
-        calcularEstadisticas(
-          predsRes.data || [],
-          matchesRes.data || [],
-          profilesRes.data || []
-        )
+        calcularEstadisticas(predsData, matchesData, profilesData)
       )
       setAnalisisCargado(true)
     } catch (err) {
