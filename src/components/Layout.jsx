@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import logoTF from '../assets/Tiburon_Flag_Icon.jpeg'
-
+import worldCupBanner from '../assets/banner-worldcup-2026.png'
 
 export default function Layout() {
   const { profile, isAdmin, signOut, user } = useAuth()
@@ -68,6 +68,15 @@ export default function Layout() {
         🏆 FIFA World Cup 2026
       </div>
 
+
+      <div className="hero-banner">
+        <img
+          src={worldCupBanner}
+          alt="World Cup Banner"
+          className="hero-banner-image"
+        />
+      </div>
+      
       <nav className="app-nav">
         <NavLink to="/" end className={linkClass}>
           🏆 Ranking

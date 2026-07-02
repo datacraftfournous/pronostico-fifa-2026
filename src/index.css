@@ -1148,3 +1148,16 @@ h1, h2, h3, .title-font {
 
   letter-spacing: 1px;
 }
+
+.hero-banner {
+  width: 100%;
+  overflow: hidden;
+  border-bottom: 2px solid var(--gold);
+}
+
+.hero-banner-image {
+  width: 100%;
+  display: block;
+  max-height: 240px;
+  object-fit: cover;
+}
