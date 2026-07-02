@@ -1,126 +1,137 @@
-  import { useEffect } from 'react'
-  import { NavLink, Outlet, useLocation } from 'react-router-dom'
-  import { useAuth } from '../context/AuthContext'
-  import { supabase } from '../lib/supabase'
-  import logoTF from '../assets/Tiburon_Flag_Icon.jpeg'
-  import worldCupBanner from '../assets/Banner.png'
+import { useEffect } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
+import logoTF from '../assets/Tiburon_Flag_Icon.jpeg'
+import worldCupBanner from '../assets/Banner.png'
 
-  export default function Layout() {
-    const { profile, isAdmin, signOut, user } = useAuth()
-    const location = useLocation()
+export default function Layout() {
+  const { profile, isAdmin, signOut, user } = useAuth()
+  const location = useLocation()
 
 
-    // Registra cada cambio de ruta como una "vista de página" en Supabase.
-    // Layout nunca se desmonta entre navegaciones (envuelve el <Outlet/>),
-    // así que este efecto se dispara exactamente una vez por cada
-    // cambio real de path — no en cada render.
-    useEffect(() => {
-      if (!user) return
+  // Registra cada cambio de ruta como una "vista de página" en Supabase.
+  // Layout nunca se desmonta entre navegaciones (envuelve el <Outlet/>),
+  // así que este efecto se dispara exactamente una vez por cada
+  // cambio real de path — no en cada render.
+  useEffect(() => {
+    if (!user) return
 
-      supabase
-        .from('page_views')
-        .insert({ user_id: user.id, path: location.pathname })
-        .then(({ error }) => {
-          if (error) console.error('No se pudo registrar la visita:', error.message)
-        })
-    }, [location.pathname, user])
+    supabase
+      .from('page_views')
+      .insert({ user_id: user.id, path: location.pathname })
+      .then(({ error }) => {
+        if (error) console.error('No se pudo registrar la visita:', error.message)
+      })
+  }, [location.pathname, user])
 
-    const linkClass = ({ isActive }) =>
-      `nav-link${isActive ? ' active' : ''}`
+  const linkClass = ({ isActive }) =>
+    `nav-link${isActive ? ' active' : ''}`
 
-    return (
-      <div className="app-layout">
-      
-    <header className="app-header">
+  return (
+    <div className="app-layout">
 
-    <img
-        src={worldCupBanner}
-        className="header-bg"
-        alt=""
-    />
+      <header className="app-header">
 
-    <div className="header-overlay"></div>
+        <img
+          src={worldCupBanner}
+          alt="World Cup Banner"
+          className="hero-banner-image"
+        />
 
-    <div className="header-content">
+        <div className="header-overlay">
 
-        <div className="header-top">
+          <div className="header-top">
 
-            <div className="logo-area">
+            <div className="brand-block">
 
-                <img
-                    src={logoTF}
-                    className="brand-logo"
-                />
+              <img
+                src={logoTF}
+                alt="Tiburón Flag"
+                className="brand-logo"
+              />
 
-                <div>
+              <div className="brand-text">
 
-                    <h1>FLAGSCORE</h1>
+                <h1>FLAGSCORE</h1>
 
-                    <p>Sports Predictions & Analytics</p>
-
-                    <small>by Tiburón Flag</small>
-
+                <div className="brand-subtitle">
+                  Sports Predictions & Analytics
                 </div>
 
-            </div>
+                <div className="brand-company">
+                  by Tiburón Flag
+                </div>
 
-            <div className="user-area">
-
-                Hola <span>{profile?.display_name}</span>
-
-                <button>Salir</button>
+              </div>
 
             </div>
 
+            <div className="header-user">
+
+              <span>
+                Hola,&nbsp;
+                <span className="username">
+                  {profile?.display_name}
+                </span>
+              </span>
+
+              <button
+                className="btn-logout"
+                onClick={signOut}
+              >
+                Salir
+              </button>
+
+            </div>
+
+          </div>
+
+          <div className="competition-banner">
+            🏆 FIFA WORLD CUP 2026
+          </div>
+
         </div>
 
-        <div className="competition-banner">
+      </header>
 
-            🏆 FIFA World Cup 2026
+      <nav className="app-nav">
+        <NavLink to="/" end className={linkClass}>
+          🏆 Ranking
+        </NavLink>
 
-        </div>
+        <NavLink to="/Predictions" end className={linkClass}>
+          ⚽ Matches
+        </NavLink>
 
-    </div>
+        <NavLink to="/daily-prediction" end className={linkClass}>
+          🎯 Predictions
+        </NavLink>
 
-</header>
+        <NavLink to="/analisis" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+          📊 Analytics
+        </NavLink>
 
-        <nav className="app-nav">
-          <NavLink to="/" end className={linkClass}>
-            🏆 Ranking
+        <NavLink to="/reglas" className={linkClass}>
+          📋 Rules
+        </NavLink>
+
+        {isAdmin && (
+          <NavLink to="/admin" className={linkClass}>
+            ⚙️ Admin
           </NavLink>
+        )}
 
-          <NavLink to="/Predictions" end className={linkClass}>
-            ⚽ Matches
+        {isAdmin && (
+          <NavLink to="/actividad" className={linkClass}>
+            📊 Actividad
           </NavLink>
+        )}
+      </nav>
 
-          <NavLink to="/daily-prediction" end className={linkClass}>
-            🎯 Predictions
-          </NavLink>
-
-          <NavLink to="/analisis" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
-            📊 Analytics
-          </NavLink>
-
-          <NavLink to="/reglas" className={linkClass}>
-            📋 Rules
-          </NavLink>
-
-          {isAdmin && (
-            <NavLink to="/admin" className={linkClass}>
-              ⚙️ Admin
-            </NavLink>
-          )}
-
-          {isAdmin && (
-            <NavLink to="/actividad" className={linkClass}>
-              📊 Actividad
-            </NavLink>
-          )}
-        </nav>
-
-        <main className="app-main">
-          <Outlet />
-        </main>
-      </div >
-    )
-  }
+      <main className="app-main">
+        <Outlet />
+      </main>
+    </div >
+  )
+}
