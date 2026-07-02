@@ -1311,9 +1311,9 @@ h3,
     gap: 4px;
   }
 
-  .competition-banner {
-    margin-bottom: -30px;
-    margin-top: 0px;
+ .competition-banner {
+    margin-top: auto;
+    margin-bottom: 12px;
     font-size: 0.85rem;
     padding: 10px 20px;
     text-align: center;
