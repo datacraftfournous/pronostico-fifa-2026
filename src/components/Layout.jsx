@@ -67,22 +67,22 @@ export default function Layout() {
       <div className="competition-banner">
         🏆 FIFA World Cup 2026
       </div>
-      
+
       <nav className="app-nav">
         <NavLink to="/" end className={linkClass}>
           🏆 Ranking
         </NavLink>
 
         <NavLink to="/Predictions" end className={linkClass}>
-          🎯 Prediction
+          ⚽ Matches
         </NavLink>
 
         <NavLink to="/daily-prediction" end className={linkClass}>
-          📅 Daily Prediction
+          🎯 Predictions
         </NavLink>
 
         <NavLink to="/analisis" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
-          📈 Analysis
+          📊 Analytics
         </NavLink>
 
         <NavLink to="/reglas" className={linkClass}>
