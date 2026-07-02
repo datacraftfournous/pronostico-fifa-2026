@@ -49,39 +49,26 @@ export default function Layout() {
               by Tiburón Flag
             </div>
 
-        <br />
-        <span style={{
-          fontSize: '0.65rem',
-          color: '#ffffff',
-          fontWeight: 700,
-          textShadow: `
-    0 0 5px #ffffff,
-    0 0 10px #ffffff,
-    0 0 15px #ffffff,
-    0 0 20px #ffffff,
-    0 0 30px rgba(255,255,255,0.8)
-  `
-        }}>
-        </span>
-    </div>
-</div >
+
+          </div>
+        </div >
 
 
-    <div className="header-user">
-      <span>
-        Hola, <span className="username">{profile?.display_name}</span>
-      </span>
-      <button className="btn-logout" onClick={signOut}>
-        Salir
-      </button>
-    </div>
+        <div className="header-user">
+          <span>
+            Hola, <span className="username">{profile?.display_name}</span>
+          </span>
+          <button className="btn-logout" onClick={signOut}>
+            Salir
+          </button>
+        </div>
       </header >
 
       <nav className="app-nav">
         <NavLink to="/" end className={linkClass}>
           🏆 Ranking
         </NavLink>
-        
+
         <NavLink to="/Predictions" end className={linkClass}>
           🎯 Prediction
         </NavLink>
