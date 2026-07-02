@@ -2,17 +2,6 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
 
 
 // ───── Configuración del bote ─────
@@ -70,22 +59,39 @@ function calcularPosiciones(standings) {
   })
 }
 
-// Colores fijos para las barras (rotan si hay más jugadores que colores)
-const PALETA_COLORES = [
-  '#d4af37', '#4a90d9', '#e67e22', '#27ae60', '#9b59b6',
-  '#e74c3c', '#16a085', '#f1c40f', '#2c3e50', '#95a5a6',
-  '#3498db', '#c0392b', '#8e44ad', '#2ecc71', '#d35400',
+// Orden cronológico de fases del torneo, para mostrar/ordenar consistentemente
+const ORDEN_FASES = [
+  'Fase de grupos',
+  'Dieciseisavos de final',
+  'Octavos de final',
+  'Cuartos de final',
+  'Semifinal',
+  'Final',
 ]
 
-// Agrupa las filas crudas de predictions+matches+profiles
-// en estadísticas por jugador, tanto globales como por fase (stage).
-function calcularEstadisticas(rows) {
+function ordenarFases(fases) {
+  return [...fases].sort((a, b) => {
+    const ia = ORDEN_FASES.indexOf(a)
+    const ib = ORDEN_FASES.indexOf(b)
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib)
+  })
+}
+
+// Cruza predictions + matches + profiles manualmente (sin depender de
+// relaciones anidadas de Supabase, que pueden fallar silenciosamente
+// si hay ambigüedad de foreign keys) y agrupa estadísticas por jugador,
+// tanto globales como por fase.
+function calcularEstadisticas(predictions, matches, profiles) {
+  const matchById = new Map(matches.map((m) => [m.id, m]))
+  const profileById = new Map(profiles.map((p) => [p.id, p]))
   const porJugador = {}
 
-  rows.forEach((row) => {
-    const partido = row.matches
-    const perfil = row.profiles
+  predictions.forEach((pred) => {
+    const partido = matchById.get(pred.match_id)
+    const perfil = profileById.get(pred.user_id)
     if (!partido || !perfil || !partido.is_finished) return
+    if (pred.home_score == null || pred.away_score == null) return
+    if (partido.home_score == null || partido.away_score == null) return
 
     const nombre = perfil.display_name
     if (!porJugador[nombre]) {
@@ -101,10 +107,10 @@ function calcularEstadisticas(rows) {
 
     const jugador = porJugador[nombre]
     const esExacto =
-      row.home_score === partido.home_score &&
-      row.away_score === partido.away_score
+      pred.home_score === partido.home_score &&
+      pred.away_score === partido.away_score
     const esGanador =
-      Math.sign(row.home_score - row.away_score) ===
+      Math.sign(pred.home_score - pred.away_score) ===
       Math.sign(partido.home_score - partido.away_score)
 
     jugador.jugados += 1
@@ -168,21 +174,30 @@ export default function Ranking() {
     try {
       setLoadingAnalisis(true)
 
-      const { data, error } = await supabase
-        .from('predictions')
-        .select(`
-          home_score,
-          away_score,
-          matches!inner ( stage, home_score, away_score, is_finished ),
-          profiles!inner ( display_name, has_paid )
-        `)
+      const [predsRes, matchesRes, profilesRes] = await Promise.all([
+        supabase
+          .from('predictions')
+          .select('user_id, match_id, home_score, away_score'),
+        supabase
+          .from('matches')
+          .select('id, stage, home_score, away_score, is_finished'),
+        supabase
+          .from('profiles')
+          .select('id, display_name, has_paid'),
+      ])
 
-      if (error) {
-        console.error(error)
-        return
-      }
+      if (predsRes.error) console.error(predsRes.error)
+      if (matchesRes.error) console.error(matchesRes.error)
+      if (profilesRes.error) console.error(profilesRes.error)
+      if (predsRes.error || matchesRes.error || profilesRes.error) return
 
-      setStatsJugadores(calcularEstadisticas(data || []))
+      setStatsJugadores(
+        calcularEstadisticas(
+          predsRes.data || [],
+          matchesRes.data || [],
+          profilesRes.data || []
+        )
+      )
       setAnalisisCargado(true)
     } catch (err) {
       console.error(err)
@@ -416,7 +431,7 @@ export default function Ranking() {
       )}
 
       {vista === 'analisis' && (
-        <AnalisisGraficos
+        <AnalisisDashboard
           loading={loadingAnalisis}
           stats={statsJugadores}
         />
@@ -426,9 +441,10 @@ export default function Ranking() {
 }
 
 // ───────────────────────────────────────────────
-// Componente de análisis: gráficos de aciertos
+// Dashboard de análisis: KPIs, leaderboards e insights
 // ───────────────────────────────────────────────
-function AnalisisGraficos({ loading, stats }) {
+
+function AnalisisDashboard({ loading, stats }) {
   if (loading) {
     return (
       <div className="loading-screen" style={{ minHeight: '200px' }}>
@@ -447,99 +463,143 @@ function AnalisisGraficos({ loading, stats }) {
 
   const porExactos = [...stats].sort((a, b) => b.exactos - a.exactos)
   const porGanador = [...stats].sort((a, b) => b.ganador - a.ganador)
-
-  // Fases disponibles, en el orden en que aparecen en los datos
-  const fases = Array.from(
-    new Set(stats.flatMap((j) => Object.keys(j.porFase)))
+  const fases = ordenarFases(
+    Array.from(new Set(stats.flatMap((j) => Object.keys(j.porFase))))
   )
 
-  // Data para el gráfico comparativo por fase: % de acierto exacto
-  const dataPorFase = stats
-    .map((j) => {
-      const fila = { display_name: j.display_name }
-      fases.forEach((fase) => {
-        const f = j.porFase[fase]
-        fila[fase] = f && f.jugados
-          ? Math.round((f.exactos / f.jugados) * 1000) / 10
-          : 0
-      })
-      return fila
-    })
-    .sort((a, b) => (b[fases[0]] || 0) - (a[fases[0]] || 0))
+  const liderExactos = porExactos[0]
+  const liderGanador = porGanador[0]
+  const promedioExactos =
+    Math.round(
+      (stats.reduce((sum, j) => sum + j.pct_exactos, 0) / stats.length) * 10
+    ) / 10
 
-  const coloresFase = ['var(--gold)', '#4a90d9', '#e67e22', '#27ae60']
+  // Delta de rendimiento entre la primera y la última fase disponible
+  // (positivo = mejora en fase eliminatoria, negativo = empeora)
+  let mayorMejora = null
+  let mayorCaida = null
+  if (fases.length > 1) {
+    const primera = fases[0]
+    const ultima = fases[fases.length - 1]
+    const deltas = stats
+      .filter((j) => j.porFase[primera]?.jugados && j.porFase[ultima]?.jugados)
+      .map((j) => {
+        const pctPrimera = Math.round(
+          (j.porFase[primera].exactos / j.porFase[primera].jugados) * 1000
+        ) / 10
+        const pctUltima = Math.round(
+          (j.porFase[ultima].exactos / j.porFase[ultima].jugados) * 1000
+        ) / 10
+        return { display_name: j.display_name, delta: pctUltima - pctPrimera, pctPrimera, pctUltima }
+      })
+    if (deltas.length) {
+      mayorMejora = [...deltas].sort((a, b) => b.delta - a.delta)[0]
+      mayorCaida = [...deltas].sort((a, b) => a.delta - b.delta)[0]
+    }
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div className="card" style={{ padding: '1.5rem' }}>
-        <h3 style={{ marginBottom: '0.25rem' }}>🎯 Marcadores exactos acertados</h3>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          Cantidad de partidos donde acertaron el marcador exacto (de {stats[0]?.jugados || 0} jugados)
-        </p>
-        <ResponsiveContainer width="100%" height={Math.max(300, stats.length * 32)}>
-          <BarChart data={porExactos} layout="vertical" margin={{ left: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" allowDecimals={false} />
-            <YAxis type="category" dataKey="display_name" width={110} />
-            <Tooltip />
-            <Bar dataKey="exactos" name="Aciertos exactos" radius={[0, 4, 4, 0]}>
-              {porExactos.map((_, i) => (
-                <Cell key={i} fill={PALETA_COLORES[i % PALETA_COLORES.length]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+      {/* ───── Fila de KPIs ───── */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1rem',
+        }}
+      >
+        <KpiCard
+          icono="🎯"
+          etiqueta="Rey del marcador exacto"
+          valor={liderExactos.display_name}
+          detalle={`${liderExactos.exactos} de ${liderExactos.jugados} partidos (${liderExactos.pct_exactos}%)`}
+        />
+        <KpiCard
+          icono="🧠"
+          etiqueta="Mejor leyendo el ganador"
+          valor={liderGanador.display_name}
+          detalle={`${liderGanador.ganador} de ${liderGanador.jugados} partidos (${liderGanador.pct_ganador}%)`}
+        />
+        <KpiCard
+          icono="📊"
+          etiqueta="Promedio del grupo"
+          valor={`${promedioExactos}%`}
+          detalle="Acierto exacto promedio entre todos"
+        />
+        {mayorMejora && (
+          <KpiCard
+            icono={mayorMejora.delta >= 0 ? '📈' : '📉'}
+            etiqueta={mayorMejora.delta >= 0 ? 'Sube en eliminación' : 'Mejor en fase de grupos'}
+            valor={mayorMejora.display_name}
+            detalle={`${mayorMejora.delta >= 0 ? '+' : ''}${mayorMejora.delta.toFixed(1)} pts vs. fase de grupos`}
+          />
+        )}
       </div>
 
-      <div className="card" style={{ padding: '1.5rem' }}>
-        <h3 style={{ marginBottom: '0.25rem' }}>✅ Ganador acertado (con cualquier marcador)</h3>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          Incluye los aciertos exactos, ya que si acertaste el marcador también acertaste el ganador
-        </p>
-        <ResponsiveContainer width="100%" height={Math.max(300, stats.length * 32)}>
-          <BarChart data={porGanador} layout="vertical" margin={{ left: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" allowDecimals={false} />
-            <YAxis type="category" dataKey="display_name" width={110} />
-            <Tooltip />
-            <Bar dataKey="ganador" name="Aciertos de ganador" radius={[0, 4, 4, 0]}>
-              {porGanador.map((_, i) => (
-                <Cell key={i} fill={PALETA_COLORES[i % PALETA_COLORES.length]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {/* ───── Leaderboard: marcador exacto ───── */}
+      <Leaderboard
+        titulo="🎯 Marcador exacto"
+        subtitulo="Partidos donde acertaron el resultado tal cual"
+        data={porExactos}
+        campo="exactos"
+        campoPct="pct_exactos"
+      />
 
+      {/* ───── Leaderboard: ganador ───── */}
+      <Leaderboard
+        titulo="✅ Acertó el ganador"
+        subtitulo="Incluye los marcadores exactos, ya que acertar el marcador implica acertar el ganador"
+        data={porGanador}
+        campo="ganador"
+        campoPct="pct_ganador"
+        colorBarra="#4a90d9"
+      />
+
+      {/* ───── Comparación por fase ───── */}
       {fases.length > 1 && (
         <div className="card" style={{ padding: '1.5rem' }}>
-          <h3 style={{ marginBottom: '0.25rem' }}>📊 % de acierto exacto por fase</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-            Compara el rendimiento de cada jugador entre fase de grupos y eliminación directa
+          <h3 style={{ margin: 0 }}>📐 Fase de grupos vs. eliminación</h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0 1.25rem' }}>
+            % de acierto exacto por jugador en cada fase
           </p>
-          <ResponsiveContainer width="100%" height={Math.max(320, stats.length * 40)}>
-            <BarChart data={dataPorFase} layout="vertical" margin={{ left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" unit="%" />
-              <YAxis type="category" dataKey="display_name" width={110} />
-              <Tooltip />
-              <Legend />
-              {fases.map((fase, i) => (
-                <Bar
-                  key={fase}
-                  dataKey={fase}
-                  name={fase}
-                  fill={coloresFase[i % coloresFase.length]}
-                  radius={[0, 4, 4, 0]}
-                />
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gap: '1rem',
+            }}
+          >
+            {[...stats]
+              .sort((a, b) => b.pct_exactos - a.pct_exactos)
+              .map((j) => (
+                <FaseMiniCard key={j.display_name} jugador={j} fases={fases} />
               ))}
-            </BarChart>
-          </ResponsiveContainer>
+          </div>
+
+          {mayorCaida && mayorMejora && mayorCaida.display_name !== mayorMejora.display_name && (
+            <p
+              style={{
+                fontSize: '0.85rem',
+                color: 'var(--text-muted)',
+                marginTop: '1.25rem',
+                paddingTop: '1rem',
+                borderTop: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              💡 <strong style={{ color: 'var(--gold)' }}>{mayorMejora.display_name}</strong> mejoró{' '}
+              {Math.abs(mayorMejora.delta).toFixed(1)} pts en eliminación directa, mientras que{' '}
+              <strong>{mayorCaida.display_name}</strong> cayó {Math.abs(mayorCaida.delta).toFixed(1)} pts
+              frente a su nivel en fase de grupos.
+            </p>
+          )}
         </div>
       )}
 
+      {/* ───── Tabla resumen ───── */}
       <div className="card" style={{ padding: '1.5rem', overflow: 'auto' }}>
-        <h3 style={{ marginBottom: '1rem' }}>📋 Tabla resumen</h3>
+        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>📋 Tabla resumen</h3>
         <table className="ranking-table">
           <thead>
             <tr>
@@ -564,6 +624,143 @@ function AnalisisGraficos({ loading, stats }) {
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  )
+}
+
+function KpiCard({ icono, etiqueta, valor, detalle }) {
+  return (
+    <div
+      className="card"
+      style={{
+        padding: '1.1rem 1.25rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.35rem',
+      }}
+    >
+      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        {icono} {etiqueta}
+      </span>
+      <span style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--gold)', lineHeight: 1.15 }}>
+        {valor}
+      </span>
+      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+        {detalle}
+      </span>
+    </div>
+  )
+}
+
+function Leaderboard({ titulo, subtitulo, data, campo, campoPct, colorBarra = 'var(--gold)' }) {
+  const maxValor = Math.max(...data.map((j) => j[campo]), 1)
+
+  return (
+    <div className="card" style={{ padding: '1.5rem' }}>
+      <h3 style={{ margin: 0 }}>{titulo}</h3>
+      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0 1.25rem' }}>
+        {subtitulo}
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+        {data.map((j, i) => (
+          <div key={j.display_name} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span
+              style={{
+                width: '1.75rem',
+                flexShrink: 0,
+                textAlign: 'center',
+                fontSize: i < 3 ? '1.1rem' : '0.85rem',
+                color: i < 3 ? undefined : 'var(--text-muted)',
+              }}
+            >
+              {medalForRank(i + 1)}
+            </span>
+
+            <span style={{ width: '9rem', flexShrink: 0, fontSize: '0.9rem' }}>
+              {j.display_name}
+            </span>
+
+            <div
+              style={{
+                flex: 1,
+                height: '0.9rem',
+                borderRadius: '999px',
+                background: 'rgba(255,255,255,0.08)',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${(j[campo] / maxValor) * 100}%`,
+                  height: '100%',
+                  borderRadius: '999px',
+                  background: colorBarra,
+                  transition: 'width 0.4s ease',
+                }}
+              />
+            </div>
+
+            <span style={{ width: '4.5rem', flexShrink: 0, textAlign: 'right', fontSize: '0.85rem', fontVariantNumeric: 'tabular-nums' }}>
+              {j[campo]} <span style={{ color: 'var(--text-muted)' }}>({j[campoPct]}%)</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FaseMiniCard({ jugador, fases }) {
+  const coloresFase = ['var(--gold)', '#4a90d9', '#e67e22', '#27ae60']
+
+  return (
+    <div
+      style={{
+        padding: '0.9rem 1rem',
+        borderRadius: '0.6rem',
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.06)',
+      }}
+    >
+      <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.6rem' }}>
+        {jugador.display_name}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        {fases.map((fase, i) => {
+          const f = jugador.porFase[fase]
+          const pct = f && f.jugados ? Math.round((f.exactos / f.jugados) * 1000) / 10 : 0
+          return (
+            <div key={fase} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', width: '5.5rem', flexShrink: 0 }}>
+                {fase.replace(' de final', '').replace('Fase de ', '')}
+              </span>
+              <div
+                style={{
+                  flex: 1,
+                  height: '0.5rem',
+                  borderRadius: '999px',
+                  background: 'rgba(255,255,255,0.08)',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    width: `${pct}%`,
+                    height: '100%',
+                    borderRadius: '999px',
+                    background: coloresFase[i % coloresFase.length],
+                  }}
+                />
+              </div>
+              <span style={{ fontSize: '0.72rem', width: '2.6rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                {pct}%
+              </span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
