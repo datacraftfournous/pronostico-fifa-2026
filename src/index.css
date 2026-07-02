@@ -1137,7 +1137,7 @@ h3,
 }
 .brand-text h1 {
   margin: 0;
-  font-size: 1.9rem;
+  font-size: 1.5rem;
   line-height: 1;
   color: white;
   text-shadow:
@@ -1147,14 +1147,14 @@ h3,
 
 .brand-subtitle {
   margin-top: 3px;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: #fff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, .8);
 }
 
 .brand-company {
   margin-top: 2px;
-  font-size: .9rem;
+  font-size: .8rem;
   color: #5dd4ff;
   font-weight: 700;
   text-shadow: 0 2px 8px rgba(0, 0, 0, .8);
@@ -1286,11 +1286,11 @@ h3,
   }
 
   .brand-text h1 {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
   }
 
   .brand-subtitle {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
 
   .header-overlay {
@@ -1301,7 +1301,7 @@ h3,
   .competition-banner {
     margin-bottom: 12px;
     margin-top: 0;
-    font-size: 1rem;
+    font-size: 0.85rem;
     padding: 10px 20px;
     text-align: center;
   }
