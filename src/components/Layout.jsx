@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import logoTF from '../assets/Tiburon_Flag_Icon.jpeg'
 import worldCupBanner from '../assets/Banner.png'
+import { APP_VERSION } from '../version'
 
 export default function Layout() {
   const { profile, isAdmin, signOut, user } = useAuth()
@@ -23,7 +24,18 @@ export default function Layout() {
       .then(({ error }) => {
         if (error) console.error('No se pudo registrar la visita:', error.message)
       })
+ 
   }, [location.pathname, user])
+
+useEffect(() => {
+  const storedVersion = localStorage.getItem('app_version')
+  if (storedVersion && storedVersion !== APP_VERSION) {
+    localStorage.setItem('app_version', APP_VERSION)
+    signOut()
+    return
+  }
+  localStorage.setItem('app_version', APP_VERSION)
+}, [])
 
   const linkClass = ({ isActive }) =>
     `nav-link${isActive ? ' active' : ''}`
