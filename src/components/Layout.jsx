@@ -69,12 +69,12 @@ export default function Layout() {
 
             <div className="header-user">
 
-              <span>
-                Hola,&nbsp;
+              <div className="user-info">
+                Hola,<br />
                 <span className="username">
                   {profile?.display_name}
                 </span>
-              </span>
+              </div>
 
               <button
                 className="btn-logout"
