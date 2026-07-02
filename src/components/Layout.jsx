@@ -32,8 +32,15 @@ export default function Layout() {
    <div className="logo">
   <span className="logo-icon">⚽</span>
   <div>
-    <h1>POLLA FIFA 2026</h1>
-    <span>Pronósticos Familia y amigos</span>
+   <h1>FLAGSCORE</h1>
+
+<div className="brand-subtitle">
+  Sports Predictions & Analytics
+</div>
+
+<div className="brand-company">
+  by Tiburón Flag
+</div>
     <br />
     <span style={{ 
   fontSize: '0.65rem',
@@ -47,8 +54,7 @@ export default function Layout() {
     0 0 30px rgba(255,255,255,0.8)
   `
 }}>
-  Developed by Jhonny Alberto Anaya Mattos - Tiburon Flag 🦈
-</span>
+ </span>
   </div>
 </div>
 
