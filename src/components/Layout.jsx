@@ -132,6 +132,6 @@ export default function Layout() {
       <main className="app-main">
         <Outlet />
       </main>
-    </div >
+    </div>
   )
 }

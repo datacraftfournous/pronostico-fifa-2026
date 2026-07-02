@@ -77,10 +77,6 @@ h3,
 }
 
 
-.header-user .username {
-  color: var(--green);
-  font-weight: 600;
-}
 
 .btn-logout {
   background: transparent;
@@ -276,7 +272,6 @@ h3,
   color: var(--text-muted);
 }
 
-/* Pegar esta línea justo debajo de .badge-pendiente en tu archivo CSS */
 
 .badge-esperando_resultado {
   background: rgba(148, 163, 184, 0.2);
@@ -1139,8 +1134,8 @@ h3,
   height: 50px;
   border-radius: 16px;
   object-fit: contain;
-  background: white;
-  padding: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 4px;
 }
 
 .brand-text h1 {
