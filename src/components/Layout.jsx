@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import logoTF from '../assets/Tiburon_Flag_Icon.jpeg'
+
 
 export default function Layout() {
   const { profile, isAdmin, signOut, user } = useAuth()
@@ -28,46 +30,52 @@ export default function Layout() {
   return (
     <div className="app-layout">
       <header className="app-header">
-   
-   <div className="logo">
-  <span className="logo-icon">⚽</span>
-  <div>
-   <h1>FLAGSCORE</h1>
 
-<div className="brand-subtitle">
-  Sports Predictions & Analytics
-</div>
+        <div className="logo">
+          <img
+            src={logoTF}
+            alt="Tiburón Flag"
+            className="brand-logo"
+          />
 
-<div className="brand-company">
-  by Tiburón Flag
-</div>
-    <br />
-    <span style={{ 
-  fontSize: '0.65rem',
-  color: '#ffffff',
-  fontWeight: 700,
-  textShadow: `
+          <div>
+            <h1>FLAGSCORE</h1>
+
+            <div className="brand-subtitle">
+              Sports Predictions & Analytics
+            </div>
+
+            <div className="brand-company">
+              by Tiburón Flag
+            </div>
+
+        <br />
+        <span style={{
+          fontSize: '0.65rem',
+          color: '#ffffff',
+          fontWeight: 700,
+          textShadow: `
     0 0 5px #ffffff,
     0 0 10px #ffffff,
     0 0 15px #ffffff,
     0 0 20px #ffffff,
     0 0 30px rgba(255,255,255,0.8)
   `
-}}>
- </span>
-  </div>
-</div>
+        }}>
+        </span>
+    </div>
+</div >
 
 
-        <div className="header-user">
-          <span>
-            Hola, <span className="username">{profile?.display_name}</span>
-          </span>
-          <button className="btn-logout" onClick={signOut}>
-            Salir
-          </button>
-        </div>
-      </header>
+    <div className="header-user">
+      <span>
+        Hola, <span className="username">{profile?.display_name}</span>
+      </span>
+      <button className="btn-logout" onClick={signOut}>
+        Salir
+      </button>
+    </div>
+      </header >
 
       <nav className="app-nav">
         <NavLink to="/" end className={linkClass}>
@@ -106,6 +114,6 @@ export default function Layout() {
       <main className="app-main">
         <Outlet />
       </main>
-    </div>
+    </div >
   )
 }
