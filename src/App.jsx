@@ -8,6 +8,7 @@ import Admin from './pages/Admin'
 import Rules from './pages/Rules'
 import DailyPrediction from './pages/DailyPrediction'
 import Analytics from './pages/Analytics'
+import ActivityLog from './pages/ActivityLog'
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, profile, loading, isAdmin } = useAuth()
@@ -62,6 +63,14 @@ export default function App() {
           element={
             <ProtectedRoute adminOnly>
               <Admin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="actividad"
+          element={
+            <ProtectedRoute adminOnly>
+              <ActivityLog />
             </ProtectedRoute>
           }
         />

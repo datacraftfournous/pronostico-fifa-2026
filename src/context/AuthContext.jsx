@@ -22,6 +22,21 @@ export function AuthProvider({ children }) {
     return data
   }, [])
 
+  // Registra un acceso en login_logs. No bloquea la UI si falla
+  // (solo lo dejamos en consola) para que un problema de tracking
+  // nunca le impida a alguien usar la app.
+  const registrarAcceso = useCallback(async (userId) => {
+    try {
+      const { error } = await supabase
+        .from('login_logs')
+        .insert({ user_id: userId })
+
+      if (error) console.error('No se pudo registrar el login:', error.message)
+    } catch (err) {
+      console.error('No se pudo registrar el login:', err)
+    }
+  }, [])
+
   useEffect(() => {
     let mounted = true
 
@@ -36,12 +51,19 @@ export function AuthProvider({ children }) {
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         if (!mounted) return
         setUser(session?.user ?? null)
+
         if (session?.user) {
           const p = await loadProfile(session.user.id)
           if (mounted) setProfile(p)
+
+          // Solo registramos el momento del login real, no cada
+          // refresco de token ni la carga inicial de sesión.
+          if (event === 'SIGNED_IN') {
+            registrarAcceso(session.user.id)
+          }
         } else {
           setProfile(null)
         }
@@ -53,7 +75,7 @@ export function AuthProvider({ children }) {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [loadProfile])
+  }, [loadProfile, registrarAcceso])
 
   async function signOut() {
     await supabase.auth.signOut()

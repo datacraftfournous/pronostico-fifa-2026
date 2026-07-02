@@ -1,8 +1,26 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 export default function Layout() {
-  const { profile, isAdmin, signOut } = useAuth()
+  const { profile, isAdmin, signOut, user } = useAuth()
+  const location = useLocation()
+
+  // Registra cada cambio de ruta como una "vista de página" en Supabase.
+  // Layout nunca se desmonta entre navegaciones (envuelve el <Outlet/>),
+  // así que este efecto se dispara exactamente una vez por cada
+  // cambio real de path — no en cada render.
+  useEffect(() => {
+    if (!user) return
+
+    supabase
+      .from('page_views')
+      .insert({ user_id: user.id, path: location.pathname })
+      .then(({ error }) => {
+        if (error) console.error('No se pudo registrar la visita:', error.message)
+      })
+  }, [location.pathname, user])
 
   const linkClass = ({ isActive }) =>
     `nav-link${isActive ? ' active' : ''}`
@@ -69,6 +87,12 @@ export default function Layout() {
         {isAdmin && (
           <NavLink to="/admin" className={linkClass}>
             ⚙️ Admin
+          </NavLink>
+        )}
+
+        {isAdmin && (
+          <NavLink to="/actividad" className={linkClass}>
+            📊 Actividad
           </NavLink>
         )}
       </nav>
