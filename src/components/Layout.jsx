@@ -31,65 +31,58 @@
     return (
       <div className="app-layout">
       
-      <header className="app-header">
+    <header className="app-header">
 
-    <div className="header-left">
-      <img
+    <img
         src={worldCupBanner}
-        alt="World Cup Banner"
-        className="hero-banner-image"
-      />
-    </div>
+        className="header-bg"
+        alt=""
+    />
 
-    <div className="header-right">
+    <div className="header-overlay"></div>
 
-      <div className="header-top">
+    <div className="header-content">
 
-        <div className="logo">
+        <div className="header-top">
 
-          <img
-            src={logoTF}
-            alt="Tiburón Flag"
-            className="brand-logo"
-          />
+            <div className="logo-area">
 
-          <div>
-            <h1>FLAGSCORE</h1>
+                <img
+                    src={logoTF}
+                    className="brand-logo"
+                />
 
-            <div className="brand-subtitle">
-              Sports Predictions & Analytics
+                <div>
+
+                    <h1>FLAGSCORE</h1>
+
+                    <p>Sports Predictions & Analytics</p>
+
+                    <small>by Tiburón Flag</small>
+
+                </div>
+
             </div>
 
-            <div className="brand-company">
-              by Tiburón Flag
+            <div className="user-area">
+
+                Hola <span>{profile?.display_name}</span>
+
+                <button>Salir</button>
+
             </div>
-          </div>
 
         </div>
 
-        <div className="header-user">
-          <span>
-            Hola, <span className="username">{profile?.display_name}</span>
-          </span>
+        <div className="competition-banner">
 
-          <button
-            className="btn-logout"
-            onClick={signOut}
-          >
-            Salir
-          </button>
+            🏆 FIFA World Cup 2026
+
         </div>
-
-      </div>
-
-      <div className="competition-banner">
-        🏆 FIFA World Cup 2026
-      </div>
 
     </div>
 
-  </header>
-
+</header>
 
         <nav className="app-nav">
           <NavLink to="/" end className={linkClass}>
