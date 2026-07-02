@@ -99,16 +99,10 @@ h3,
 }
 
 .app-nav {
-  background: #08111f;
-
-  border-bottom: 1px solid rgba(0, 191, 255, .15);
-
-  display: flex;
-  gap: 1rem;
-
-  padding: 0.8rem 2rem;
-
-  overflow-x: auto;
+  background: rgba(8, 17, 31, .92);
+  backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(255, 255, 255, .05);
+  border-bottom: 1px solid rgba(255, 215, 0, .18);
 }
 
 .nav-link {
@@ -1086,109 +1080,115 @@ h3,
   HEADER
 ===========================*/
 
-.app-header{
-    position:relative;
-    height:300px;
-    overflow:hidden;
-    border-bottom:2px solid #ffd700;
+.app-header {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+  border-bottom: 2px solid #ffd700;
 }
 
-.hero-banner-image{
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-    object-fit:cover;
+.hero-banner-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  .hero-banner-image {
+    object-position: center 35%;
+  }
 }
 
-.app-header::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:linear-gradient(
-        rgba(0,0,0,.20),
-        rgba(0,0,0,.45)
-    );
+.app-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, .20),
+      rgba(0, 0, 0, .45));
 }
 
-.header-overlay{
-    position:relative;
-    z-index:2;
-    height:100%;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
+.header-overlay {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.header-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    padding:28px 40px;
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 28px 40px;
 }
 
-.brand-block{
-    display:flex;
-    align-items:center;
-    gap:20px;
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
-.brand-logo{
-    width:90px;
-    height:90px;
-    border-radius:16px;
-    object-fit:contain;
-    background:white;
-    padding:6px;
+.brand-logo {
+  width: 90px;
+  height: 90px;
+  border-radius: 16px;
+  object-fit: contain;
+  background: white;
+  padding: 6px;
 }
 
-.brand-text h1{
-    margin:0;
-    font-size:3.6rem;
-    line-height:1;
-    color:white;
-    text-shadow:0 4px 15px rgba(0,0,0,.8);
+.brand-text h1 {
+  margin: 0;
+  font-size: 3.6rem;
+  line-height: 1;
+  color: white;
+  text-shadow:
+    0 4px 20px rgba(0, 0, 0, .9),
+    0 0 12px rgba(255, 255, 255, .15);
 }
 
-.brand-subtitle{
-    margin-top:8px;
-    font-size:1.1rem;
-    color:#fff;
-    text-shadow:0 2px 8px rgba(0,0,0,.8);
+.brand-subtitle {
+  margin-top: 8px;
+  font-size: 1.1rem;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, .8);
 }
 
-.brand-company{
-    margin-top:4px;
-    font-size:.9rem;
-    color:#5dd4ff;
-    font-weight:700;
-    text-shadow:0 2px 8px rgba(0,0,0,.8);
-}  
-
-.header-user{
-    display:flex;
-    align-items:center;
-    gap:18px;
-    color:white;
-    font-size:1rem;
-    text-shadow:0 2px 8px rgba(0,0,0,.8);
+.brand-company {
+  margin-top: 4px;
+  font-size: .9rem;
+  color: #5dd4ff;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, .8);
 }
 
-.header-user .username{
-    color:#00ff8c;
-    font-weight:700;
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  background: rgba(0, 0, 0, .35);
+  padding: 12px 18px;
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
 }
 
-.competition-banner{
-    align-self:center;
-    margin-bottom:24px;
-    padding:12px 36px;
-    border-radius:40px;
-    background:rgba(0,0,0,.55);
-    border:1px solid rgba(255,215,0,.7);
-    backdrop-filter:blur(10px);
-    color:#ffd700;
-    font-size:1.25rem;
-    font-weight:700;
-    letter-spacing:2px;
+.header-user .username {
+  color: #00ff8c;
+  font-weight: 700;
+}
+
+.competition-banner {
+  align-self: center;
+  margin-bottom: 24px;
+  padding: 12px 36px;
+  border-radius: 40px;
+  background: rgba(0, 0, 0, .55);
+  border: 1px solid rgba(255, 215, 0, .7);
+  backdrop-filter: blur(10px);
+  color: #ffd700;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
