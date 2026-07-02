@@ -31,6 +31,26 @@ export default function Layout() {
   return (
     <div className="app-layout">
 
+      <div className="user-bar">
+        <div className="header-user">
+
+          <div className="user-info">
+            Hola,<br />
+            <span className="username">
+              {profile?.display_name}
+            </span>
+          </div>
+
+          <button
+            className="btn-logout"
+            onClick={signOut}
+          >
+            Salir
+          </button>
+
+        </div>
+      </div>
+
       <header className="app-header">
 
         <img
@@ -64,24 +84,6 @@ export default function Layout() {
                 </div>
 
               </div>
-
-            </div>
-
-            <div className="header-user">
-
-              <div className="user-info">
-                Hola,<br />
-                <span className="username">
-                  {profile?.display_name}
-                </span>
-              </div>
-
-              <button
-                className="btn-logout"
-                onClick={signOut}
-              >
-                Salir
-              </button>
 
             </div>
 

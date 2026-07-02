@@ -1205,6 +1205,14 @@ h3,
     font-weight:700;
     letter-spacing:2px;
 }
+
+.user-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 40px 0;
+  background: var(--bg-dark);
+}
+
 /* =====================================
    RESPONSIVE PARA CELULARES
 ===================================== */
@@ -1270,13 +1278,16 @@ h3,
     padding: 16px 18px;
   }
 
-.header-user {
+.user-bar {
+    padding: 8px 12px 0;
+  }
+
+  .header-user {
     align-self: flex-start;
     width: 100%;
-    padding: 8px 10px 5px;
+    padding: 5px 10px;
     gap: 8px;
     justify-content: space-between;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
   }
 
   .user-info {
