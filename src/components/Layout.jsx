@@ -64,6 +64,10 @@ export default function Layout() {
         </div>
       </header >
 
+      <div className="competition-banner">
+        🏆 FIFA World Cup 2026
+      </div>
+      
       <nav className="app-nav">
         <NavLink to="/" end className={linkClass}>
           🏆 Ranking
