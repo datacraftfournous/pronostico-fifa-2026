@@ -1275,6 +1275,7 @@ h3,
     width: 100%;
     padding: 5px 10px;
     gap: 8px;
+    justify-content: space-between;
   }
 
   .user-info {
@@ -1295,12 +1296,12 @@ h3,
 
   .header-overlay {
     justify-content: flex-start;
-    gap: 10px;
+    gap: 4px;
   }
 
   .competition-banner {
     margin-bottom: 12px;
-    margin-top: 0;
+    margin-top: -6px;
     font-size: 0.85rem;
     padding: 10px 20px;
     text-align: center;
