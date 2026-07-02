@@ -72,41 +72,8 @@ h3,
 }
 
 
-.logo{
-
-    background:rgba(5,15,30,.75);
-
-    backdrop-filter:blur(10px);
-
-    padding:18px;
-
-    border-radius:16px;
-}
-
 .logo-icon {
   font-size: 2rem;
-}
-
-.logo h1 {
-  font-size: 2rem;
-  line-height: 1;
-  margin: 0;
-
-  background: linear-gradient(90deg,
-      #ffffff,
-      #2ea8ff);
-
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-
-  letter-spacing: 2px;
-}
-
-.logo span {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-family: 'Inter', sans-serif;
-  letter-spacing: 0;
 }
 
 
@@ -1114,11 +1081,6 @@ h3,
   font-size: 0.9rem;
 }
 
-.brand-subtitle {
-  font-size: 0.8rem;
-  color: #94a3b8;
-}
-
 
 /*==========================
   HEADER
@@ -1188,15 +1150,34 @@ h3,
     text-shadow:0 4px 15px rgba(0,0,0,.8);
 }
 
-
-.brand-company{
-    margin-top:4px;
-    color:#5dd4ff;
-    font-weight:700;
+.brand-subtitle{
+    margin-top:8px;
+    font-size:1.1rem;
+    color:#fff;
     text-shadow:0 2px 8px rgba(0,0,0,.8);
 }
 
+.brand-company{
+    margin-top:4px;
+    font-size:.9rem;
+    color:#5dd4ff;
+    font-weight:700;
+    text-shadow:0 2px 8px rgba(0,0,0,.8);
+}  
 
+.header-user{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    color:white;
+    font-size:1rem;
+    text-shadow:0 2px 8px rgba(0,0,0,.8);
+}
+
+.header-user .username{
+    color:#00ff8c;
+    font-weight:700;
+}
 
 .competition-banner{
     align-self:center;
