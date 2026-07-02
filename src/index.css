@@ -1201,3 +1201,58 @@ h3,
     font-weight:700;
     letter-spacing:2px;
 }
+
+/* =====================================
+   RESPONSIVE PARA CELULARES
+===================================== */
+
+@media (max-width: 768px) {
+
+  .app-main{
+    padding:12px;
+  }
+
+  .card{
+    padding:14px;
+  }
+
+  .ranking-table{
+    display:block;
+    overflow-x:auto;
+    white-space:nowrap;
+  }
+
+  .pivot-table{
+    display:block;
+    overflow-x:auto;
+    white-space:nowrap;
+  }
+
+  .match-teams{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+
+  .score-inputs{
+    justify-content:center;
+  }
+
+  .analytics-grid{
+    grid-template-columns:1fr;
+  }
+
+  .analytics-kpi-grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .app-nav{
+    padding:12px;
+    gap:8px;
+  }
+
+  .nav-link{
+    font-size:.82rem;
+    padding:10px 14px;
+  }
+
+}
