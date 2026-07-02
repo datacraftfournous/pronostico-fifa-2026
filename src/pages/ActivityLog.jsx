@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 
 // Nombres legibles para cada ruta de la app
 const NOMBRES_PAGINA = {
@@ -51,6 +52,7 @@ function formatFecha(iso) {
 }
 
 export default function ActivityLog() {
+  const { user } = useAuth()
   const [profiles, setProfiles] = useState([])
   const [logins, setLogins] = useState([])
   const [pageViews, setPageViews] = useState([])
@@ -70,9 +72,15 @@ export default function ActivityLog() {
         fetchAllRows('page_views', 'user_id, path, created_at', { column: 'created_at' }),
       ])
 
-      setProfiles(profilesData)
-      setLogins(loginsData)
-      setPageViews(pageViewsData)
+      //setProfiles(profilesData)
+      //setLogins(loginsData)
+      //setPageViews(pageViewsData)
+
+      setProfiles(profilesData.filter((p) => p.id !== user.id))
+      setLogins(loginsData.filter((l) => l.user_id !== user.id))
+      setPageViews(pageViewsData.filter((v) => v.user_id !== user.id))
+
+
     } catch (err) {
       console.error('Error cargando actividad:', err)
     } finally {
