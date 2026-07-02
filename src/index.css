@@ -1114,3 +1114,22 @@ h1, h2, h3, .title-font {
   color: #00bfff;
   font-weight: 600;
 }
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.brand-company {
+  font-size: 0.7rem;
+  color: #00bfff;
+  font-weight: 600;
+}
+
+.brand-subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
