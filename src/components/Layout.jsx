@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import logoTF from '../assets/Tiburon_Flag_Icon.jpeg'
 import worldCupBanner from '../assets/Banner.png'
 import { APP_VERSION } from '../version'
+import TodayMatchesStrip from './TodayMatchesStrip'
 
 export default function Layout() {
   const { profile, isAdmin, signOut, user } = useAuth()
@@ -108,6 +109,8 @@ useEffect(() => {
         </div>
 
       </header>
+
+      <TodayMatchesStrip />
 
       <nav className="app-nav">
         <NavLink to="/" end className={linkClass}>
