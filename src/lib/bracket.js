@@ -25,8 +25,8 @@ const BRACKET = {
   92: { matches: [79, 80], stage: 'Octavos' },
   93: { matches: [83, 84], stage: 'Octavos' },
   94: { matches: [81, 82], stage: 'Octavos' },
-  95: { matches: [86, 88], stage: 'Octavos' },
-  96: { matches: [85, 87], stage: 'Octavos' },
+  95: { matches: [86, 87], stage: 'Octavos' },
+  96: { matches: [85, 88], stage: 'Octavos' },
 }
 
 export async function tryCreateNextMatch(bracketSlot) {
