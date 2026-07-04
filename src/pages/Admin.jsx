@@ -227,9 +227,11 @@ export default function Admin() {
       // Verificación dura: confirmamos que el valor que quedó en la base
       // es el mismo que acabamos de calcular. Si no coincide, lo reportamos
       // en vez de asumir que todo salió bien.
-      if (Number(savedRow.points) !== Number(points)) {
+      const puntosCalculados = Number(points.toFixed(2))
+
+      if (Number(savedRow.points) !== puntosCalculados) {
         fallosVerificacion.push(
-          `pred ${pred.id}: calculado ${points} pero quedó guardado ${savedRow.points}`
+          `pred ${pred.id}: calculado ${puntosCalculados} pero quedó guardado ${savedRow.points}`
         )
       }
     }
