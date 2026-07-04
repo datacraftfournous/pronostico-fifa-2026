@@ -1,6 +1,6 @@
 import { toZonedTime } from 'date-fns-tz'
 //import { isBefore, subHours } from 'date-fns'
-import { isBefore, subMinutes } from 'date-fns' 
+import { isBefore, subMinutes } from 'date-fns'
 
 export const COLOMBIA_TZ = 'America/Bogota'
 
@@ -253,7 +253,9 @@ export function calcularPuntosAny(
     ? calcularBonoAvance(prediction.predicted_advancer, match.advancing_team)
     : 0
 
-  return base + bono
+  const total = (base + bono) * multiplicadorParaMatch(match)
+
+  return total
 }
 
 export function maxPuntosFor(match) {
