@@ -31,6 +31,12 @@ export default function Predictions() {
   // Jugadores disponibles para elegir como goleador (nombre + país + posición)
   const [players, setPlayers] = useState([])
 
+  // Texto que el usuario va escribiendo para buscar al goleador (autocompletado).
+  // topScorerPick solo se actualiza cuando el usuario hace clic en una opción
+  // de la lista filtrada, así el valor guardado siempre es un jugador real.
+  const [topScorerQuery, setTopScorerQuery] = useState('')
+  const [showTopScorerOptions, setShowTopScorerOptions] = useState(false)
+
   const [statusFilter, setStatusFilter] = useState('todos')
   const [groupFilter, setGroupFilter] = useState('todos')
   const [dateFilter, setDateFilter] = useState('todas')
@@ -44,6 +50,15 @@ export default function Predictions() {
     return new Date(dateString).toLocaleDateString('en-CA', {
       timeZone: 'America/Bogota',
     })
+  }
+
+  // Quita tildes y pasa a minúsculas, para poder buscar "vinicius" y que
+  // encuentre "Vinícius Júnior" sin que el usuario tenga que escribir la tilde.
+  function normalizeText(text) {
+    return (text || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
   }
 
   useEffect(() => {
@@ -88,6 +103,7 @@ export default function Predictions() {
     setSpecialPrediction(data || null)
     setChampionPick(data?.predicted_champion || '')
     setTopScorerPick(data?.predicted_top_scorer || '')
+    setTopScorerQuery(data?.predicted_top_scorer || '')
   }
 
   async function handleSaveSpecial(e) {
@@ -156,6 +172,19 @@ export default function Predictions() {
   )
 
   const specialEditable = canEditSpecialPrediction()
+
+  // Lista filtrada que se muestra bajo el campo de goleador mientras el
+  // usuario escribe. Se limita a 8 resultados para que no se vuelva una
+  // lista eterna en el celular.
+  const filteredTopScorerOptions = useMemo(() => {
+    const query = normalizeText(topScorerQuery)
+
+    if (!query) return players.slice(0, 8)
+
+    return players
+      .filter((p) => normalizeText(p.player_name).includes(query))
+      .slice(0, 8)
+  }, [players, topScorerQuery])
 
   async function loadData() {
     if (!user) return
@@ -396,21 +425,51 @@ export default function Predictions() {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className="form-group" style={{ position: 'relative' }}>
               <label>Goleador</label>
-              <select
-                value={topScorerPick}
-                onChange={(e) => setTopScorerPick(e.target.value)}
+              <input
+                type="text"
+                value={topScorerQuery}
+                onChange={(e) => {
+                  setTopScorerQuery(e.target.value)
+                  setTopScorerPick('') // obliga a elegir de la lista para guardar un jugador válido
+                  setShowTopScorerOptions(true)
+                }}
+                onFocus={() => setShowTopScorerOptions(true)}
+                onBlur={() => {
+                  // Pequeño retraso para que el clic en una opción se registre
+                  // antes de ocultar la lista.
+                  setTimeout(() => setShowTopScorerOptions(false), 150)
+                }}
                 disabled={!specialEditable}
+                placeholder="Escribe el nombre del jugador..."
+                autoComplete="off"
                 required
-              >
-                <option value="">Selecciona un jugador</option>
-                {players.map((p) => (
-                  <option key={p.id} value={p.player_name}>
-                    {p.player_name} ({p.team_name} - {p.position})
-                  </option>
-                ))}
-              </select>
+              />
+
+              {showTopScorerOptions && specialEditable && (
+                <div className="autocomplete-list">
+                  {filteredTopScorerOptions.length === 0 ? (
+                    <div className="autocomplete-empty">No se encontraron jugadores</div>
+                  ) : (
+                    filteredTopScorerOptions.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className="autocomplete-item"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setTopScorerPick(p.player_name)
+                          setTopScorerQuery(p.player_name)
+                          setShowTopScorerOptions(false)
+                        }}
+                      >
+                        {p.player_name} ({p.team_name} - {p.position})
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             <button
