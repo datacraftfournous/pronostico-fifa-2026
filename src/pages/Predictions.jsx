@@ -231,9 +231,9 @@ export default function Predictions() {
       </div>
 
       {/* ACCESO RÁPIDO: Fase -> Partido (igual que en Admin) */}
-      <div className="card predictions-filters">
-        <div>
-          <label className="filter-label">Fase</label>
+      <div className="admin-section card" style={{ marginBottom: '0.75rem' }}>
+        <div className="form-group">
+          <label>Fase</label>
           <select
             value={quickStage}
             onChange={(e) => {
@@ -250,8 +250,8 @@ export default function Predictions() {
           </select>
         </div>
 
-        <div>
-          <label className="filter-label">Partido</label>
+        <div className="form-group">
+          <label>Partido</label>
           <select
             value={quickMatchId}
             onChange={(e) => setQuickMatchId(e.target.value)}
@@ -274,7 +274,6 @@ export default function Predictions() {
           <button
             type="button"
             className="btn"
-            style={{ marginTop: '0.5rem' }}
             onClick={() => {
               setQuickStage('')
               setQuickMatchId('')
