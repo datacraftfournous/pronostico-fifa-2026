@@ -16,6 +16,10 @@ export default function Predictions() {
   const [dateFilter, setDateFilter] = useState('todas')
   const [stageFilter, setStageFilter] = useState('eliminatoria') // 'grupos' | 'eliminatoria'
 
+  // Acceso rápido: Fase (match.stage real, igual que en Admin) -> Partido
+  const [quickStage, setQuickStage] = useState('')
+  const [quickMatchId, setQuickMatchId] = useState('')
+
   function getLocalDate(dateString) {
     return new Date(dateString).toLocaleDateString('en-CA', {
       timeZone: 'America/Bogota',
@@ -129,6 +133,19 @@ export default function Predictions() {
     }
   }
 
+  // Fases reales tal como están guardadas en match.stage (ej: "Grupo A",
+  // "Octavos", "Semifinal"...), igual que el combo "Fase" del Admin.
+  const availableStages = useMemo(() => {
+    return [...new Set(matches.map((m) => m.stage))].sort()
+  }, [matches])
+
+  // Partidos de la fase elegida en el acceso rápido, ordenados por fecha.
+  const quickStageMatches = useMemo(() => {
+    return matches
+      .filter((m) => m.stage === quickStage)
+      .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
+  }, [matches, quickStage])
+
   const stageMatches = useMemo(() => {
     return matches.filter((m) =>
       stageFilter === 'eliminatoria' ? isKnockoutMatch(m) : !isKnockoutMatch(m)
@@ -169,6 +186,12 @@ export default function Predictions() {
     return result
   }, [stageMatches, groupFilter, dateFilter, statusFilter, stageFilter])
 
+  // Si el usuario eligió un partido puntual con el combo Fase/Partido,
+  // mostramos solo ese, ignorando el resto de los filtros de abajo.
+  const displayedMatches = quickMatchId
+    ? matches.filter((m) => String(m.id) === String(quickMatchId))
+    : filteredMatches
+
   const myTotal = Object.values(predictions).reduce(
     (sum, p) => sum + (p.points || 0),
     0
@@ -205,6 +228,61 @@ export default function Predictions() {
             {label}
           </button>
         ))}
+      </div>
+
+      {/* ACCESO RÁPIDO: Fase -> Partido (igual que en Admin) */}
+      <div className="card predictions-filters">
+        <div>
+          <label className="filter-label">Fase</label>
+          <select
+            value={quickStage}
+            onChange={(e) => {
+              setQuickStage(e.target.value)
+              setQuickMatchId('')
+            }}
+          >
+            <option value="">Selecciona una fase</option>
+            {availableStages.map((stage) => (
+              <option key={stage} value={stage}>
+                {stage}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="filter-label">Partido</label>
+          <select
+            value={quickMatchId}
+            onChange={(e) => setQuickMatchId(e.target.value)}
+            disabled={!quickStage}
+          >
+            <option value="">Selecciona un partido</option>
+            {quickStageMatches.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.home_team} vs {m.away_team} —{' '}
+                {new Date(m.kickoff_at).toLocaleDateString('es-CO', {
+                  day: '2-digit',
+                  month: 'short',
+                })}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {quickMatchId && (
+          <button
+            type="button"
+            className="btn"
+            style={{ marginTop: '0.5rem' }}
+            onClick={() => {
+              setQuickStage('')
+              setQuickMatchId('')
+            }}
+          >
+            Ver todos los partidos de nuevo
+          </button>
+        )}
       </div>
 
       {/* FILTROS */}
@@ -283,13 +361,13 @@ export default function Predictions() {
       </div>
 
       {/* MATCHES */}
-      {filteredMatches.length === 0 ? (
+      {displayedMatches.length === 0 ? (
         <div className="empty-state card">
           <div className="icon">📅</div>
           <p>No hay partidos para los filtros seleccionados.</p>
         </div>
       ) : (
-        filteredMatches.map((match) => (
+        displayedMatches.map((match) => (
           <MatchCard
             key={match.id}
             match={match}

@@ -3,6 +3,7 @@ import { supabase, usernameToEmail } from '../lib/supabase'
 import { calcularPuntosAny, formatKickoffColombia, multiplicadorPorFase } from '../lib/scoring'
 import { tryCreateNextMatch } from '../lib/bracket'
 
+
 export default function Admin() {
   const [tab, setTab] = useState('resultados')
   const [matches, setMatches] = useState([])
