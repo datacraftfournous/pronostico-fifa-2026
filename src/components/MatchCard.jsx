@@ -33,20 +33,16 @@ export default function MatchCard({
   // El comodín solo existe en fase eliminatoria (así está definido en scoring.js).
   const jokerAplica = isKnockoutMatch(match)
 
-  const isKnockout =
-    canEditAnyPrediction(match) &&
-    home !== '' &&
-    away !== '' &&
-    Number(home) === Number(away)
+  const isKnockout = isKnockoutMatch(match)
 
   async function handleSave() {
     if (home === '' || away === '') return
 
-    // validación: si empate en eliminatoria exigir clasificado
-    if (isKnockout && !advancer) {
-      setSaveError('Debes seleccionar el equipo que clasifica')
-      return
-    }
+    // En toda eliminatoria debe quedar guardado el clasificado
+if (isKnockout && !advancer) {
+  setSaveError('Debes seleccionar el equipo que clasifica')
+  return
+}
 
     setSaving(true)
     setSaveError('')
@@ -117,7 +113,7 @@ export default function MatchCard({
           />
         </div>
 
-        {editable && isKnockout && (
+       {editable && isKnockoutMatch(match) && (
           <div className="form-group" style={{ marginTop: '0.5rem' }}>
             <label>Equipo que clasifica</label>
             <select
