@@ -219,7 +219,7 @@ export default function Predictions() {
   // Fase de grupos sigue bloqueada por completo (ya cerrada).
   // IMPORTANTE: comparamos con String() (no ===) porque matchId puede
   // llegar como string desde el input/evento, mientras match.id es number.
-  async function handleSave(matchId, homeScore, awayScore, predictedAdvancer) {
+  async function handleSave(matchId, homeScore, awayScore, predictedAdvancer, joker = false) {
     const match = matches.find((m) => String(m.id) === String(matchId))
 
     if (!match) {
@@ -244,11 +244,18 @@ export default function Predictions() {
           home_score: homeScore,
           away_score: awayScore,
           predicted_advancer: predictedAdvancer,
+          joker,
         })
         .eq('id', existing.id)
 
       if (error) {
         console.error('Error actualizando predicción', error)
+        // 23505 = violación de índice único en Postgres. Como solo puede
+        // haber un joker=true por usuario, esto significa que ya lo tenía
+        // activo en otro partido (por ejemplo desde otro dispositivo).
+        if (error.code === '23505') {
+          return { success: false, reason: 'joker_already_used', error }
+        }
         return { success: false, reason: 'supabase_error', error }
       }
 
@@ -259,6 +266,7 @@ export default function Predictions() {
           home_score: homeScore,
           away_score: awayScore,
           predicted_advancer: predictedAdvancer,
+          joker,
         },
       }))
       return { success: true }
@@ -271,12 +279,16 @@ export default function Predictions() {
           home_score: homeScore,
           away_score: awayScore,
           predicted_advancer: predictedAdvancer,
+          joker,
         })
         .select()
         .single()
 
       if (error || !data) {
         console.error('Error insertando predicción', error)
+        if (error?.code === '23505') {
+          return { success: false, reason: 'joker_already_used', error }
+        }
         return { success: false, reason: 'supabase_error', error }
       }
 
@@ -355,6 +367,14 @@ export default function Predictions() {
     (sum, p) => sum + (p.points || 0),
     0
   )
+
+  // El comodín solo puede estar activo en UN partido a la vez. Buscamos
+  // en las predicciones ya guardadas cuál tiene joker = true, para poder
+  // bloquear el checkbox en todos los demás MatchCard.
+  const jokerMatchId = useMemo(() => {
+    const found = Object.values(predictions).find((p) => p.joker === true)
+    return found ? found.match_id : null
+  }, [predictions])
 
   if (loading) {
     return (
@@ -483,6 +503,28 @@ export default function Predictions() {
         </div>
       ) : (
         <>
+          {/* ESTADO DEL COMODÍN */}
+          <div
+            className="card"
+            style={{
+              marginBottom: '0.75rem',
+              padding: '0.6rem 0.8rem',
+              fontSize: '0.85rem',
+            }}
+          >
+            {jokerMatchId ? (
+              <span>
+                🃏 Tu comodín está activo en:{' '}
+                <strong>
+                  {matches.find((m) => m.id === jokerMatchId)?.home_team} vs{' '}
+                  {matches.find((m) => m.id === jokerMatchId)?.away_team}
+                </strong>
+              </span>
+            ) : (
+              <span>🃏 Aún no has usado tu comodín. Puedes activarlo en cualquier partido de eliminatoria.</span>
+            )}
+          </div>
+
           {/* FASE: grupos (solo lectura) vs eliminatoria (editable) */}
           <div className="tabs" style={{ marginBottom: '0.75rem' }}>
             {[
@@ -643,6 +685,7 @@ export default function Predictions() {
                 onSave={handleSave}
                 showPoints
                 readOnly={!isKnockoutMatch(match)}
+                jokerLockedElsewhere={jokerMatchId !== null && jokerMatchId !== match.id}
               />
             ))
           )}
