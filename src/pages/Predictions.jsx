@@ -28,7 +28,7 @@ export default function Predictions() {
 
   useEffect(() => {
     setDateFilter('todas')
-  }, [groupFilter, stageFilter])
+  }, [groupFilter, stageFilter, quickStage])
 
   useEffect(() => {
     loadData()
@@ -152,22 +152,29 @@ export default function Predictions() {
     )
   }, [matches, stageFilter])
 
-  const availableDates = useMemo(() => {
-    let source = stageMatches
-
-    if (groupFilter !== 'todos') {
-      source = source.filter((m) => m.group_code === groupFilter)
+  // Partidos base: si hay una Fase elegida en el acceso rápido, esa manda
+  // (ignora los tabs de eliminatoria/grupos y el filtro de grupo, porque la
+  // fase real ya es más específica). Si no, se usa el filtro de siempre.
+  const baseMatches = useMemo(() => {
+    if (quickStage) {
+      return matches.filter((m) => m.stage === quickStage)
     }
 
-    return [...new Set(source.map((m) => getLocalDate(m.kickoff_at)))].sort()
-  }, [stageMatches, groupFilter])
-
-  const filteredMatches = useMemo(() => {
-    let result = [...stageMatches]
+    let result = stageMatches
 
     if (stageFilter === 'grupos' && groupFilter !== 'todos') {
       result = result.filter((m) => m.group_code === groupFilter)
     }
+
+    return result
+  }, [matches, quickStage, stageMatches, stageFilter, groupFilter])
+
+  const availableDates = useMemo(() => {
+    return [...new Set(baseMatches.map((m) => getLocalDate(m.kickoff_at)))].sort()
+  }, [baseMatches])
+
+  const filteredMatches = useMemo(() => {
+    let result = [...baseMatches]
 
     if (dateFilter !== 'todas') {
       result = result.filter((m) => getLocalDate(m.kickoff_at) === dateFilter)
@@ -184,7 +191,7 @@ export default function Predictions() {
     result.sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
 
     return result
-  }, [stageMatches, groupFilter, dateFilter, statusFilter, stageFilter])
+  }, [baseMatches, dateFilter, statusFilter])
 
   // Si el usuario eligió un partido puntual con el combo Fase/Partido,
   // mostramos solo ese, ignorando el resto de los filtros de abajo.
@@ -286,7 +293,7 @@ export default function Predictions() {
 
       {/* FILTROS */}
       <div className="card predictions-filters">
-        {stageFilter === 'grupos' && (
+        {stageFilter === 'grupos' && !quickStage && (
           <div>
             <label className="filter-label">Grupo</label>
 
