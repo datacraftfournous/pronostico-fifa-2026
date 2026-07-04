@@ -178,8 +178,19 @@ export function calcularPuntosEliminatoriaCompleto(prediction, match) {
 // Se califican una sola vez, cuando termine el torneo. Todos arrancan
 // en 0, así que es la apuesta más pareja que existe en este momento.
 
-export const PUNTOS_CAMPEON = 15
-export const PUNTOS_GOLEADOR = 10
+export const PUNTOS_CAMPEON = 20
+export const PUNTOS_GOLEADOR = 15
+
+// Fecha límite para elegir/editar campeón y goleador. Después de esta
+// fecha y hora (zona Colombia) el formulario ya no debe permitir
+// guardar ni cambiar estas dos predicciones.
+export const SPECIAL_PREDICTIONS_DEADLINE = '2026-07-05T23:59:59-05:00'
+
+export function canEditSpecialPrediction() {
+  const now = nowInColombia()
+  const limite = kickoffInColombia(SPECIAL_PREDICTIONS_DEADLINE)
+  return isBefore(now, limite)
+}
 
 // specialPrediction: { predicted_champion, predicted_top_scorer }
 // resultadoTorneo:   { champion, top_scorer } (de tournament_results)
