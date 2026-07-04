@@ -19,13 +19,13 @@ async function roundExists(stage) {
   return data && data.length > 0
 }
 const BRACKET = {
-  89: { matches: [74, 77], stage: 'Octavos' },
-  90: { matches: [73, 75], stage: 'Octavos' },
-  91: { matches: [76, 78], stage: 'Octavos' },
+  89: { matches: [75, 78], stage: 'Octavos' },
+  90: { matches: [73, 76], stage: 'Octavos' },
+  91: { matches: [74, 77], stage: 'Octavos' },
   92: { matches: [79, 80], stage: 'Octavos' },
-  93: { matches: [83, 84], stage: 'Octavos' },
-  94: { matches: [81, 82], stage: 'Octavos' },
-  95: { matches: [86, 87], stage: 'Octavos' },
+  93: { matches: [84, 83], stage: 'Octavos' },
+  94: { matches: [82, 81], stage: 'Octavos' },
+  95: { matches: [87, 86], stage: 'Octavos' },
   96: { matches: [85, 88], stage: 'Octavos' },
 }
 
