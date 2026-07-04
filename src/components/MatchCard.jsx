@@ -7,9 +7,16 @@ import {
   maxPuntosFor,
 } from '../lib/scoring'
 
-export default function MatchCard({ match, prediction, onSave, showPoints = false, readOnly = false }) {
+export default function MatchCard({
+  match,
+  prediction,
+  onSave,
+  showPoints = false,
+  readOnly = false,
+}) {
   const [home, setHome] = useState(prediction?.home_score ?? '')
   const [away, setAway] = useState(prediction?.away_score ?? '')
+  const [advancer, setAdvancer] = useState(prediction?.predicted_advancer ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -18,15 +25,33 @@ export default function MatchCard({ match, prediction, onSave, showPoints = fals
   const status = getMatchStatus(match)
   const maxPuntos = maxPuntosFor(match)
 
+  const isKnockout =
+    canEditAnyPrediction(match) &&
+    home !== '' &&
+    away !== '' &&
+    Number(home) === Number(away)
+
   async function handleSave() {
     if (home === '' || away === '') return
+
+    // validación: si empate en eliminatoria exigir clasificado
+    if (isKnockout && !advancer) {
+      setSaveError('Debes seleccionar el equipo que clasifica')
+      return
+    }
+
     setSaving(true)
     setSaveError('')
-    const result = await onSave(match.id, parseInt(home, 10), parseInt(away, 10))
+
+    const result = await onSave(
+      match.id,
+      parseInt(home, 10),
+      parseInt(away, 10),
+      advancer
+    )
+
     setSaving(false)
 
-    // onSave puede no devolver nada en componentes viejos (ej. modo solo
-    // lectura); en ese caso no mostramos ni éxito ni error.
     if (result === undefined) return
 
     if (result.success) {
@@ -62,7 +87,9 @@ export default function MatchCard({ match, prediction, onSave, showPoints = fals
             disabled={!editable}
             placeholder="-"
           />
+
           <span className="score-separator">:</span>
+
           <input
             type="number"
             min="0"
@@ -74,12 +101,30 @@ export default function MatchCard({ match, prediction, onSave, showPoints = fals
           />
         </div>
 
+        {editable && isKnockout && (
+          <div className="form-group" style={{ marginTop: '0.5rem' }}>
+            <label>Equipo que clasifica</label>
+            <select
+              value={advancer}
+              onChange={(e) => setAdvancer(e.target.value)}
+              disabled={!editable}
+            >
+              <option value="">Selecciona clasificado</option>
+              <option value={match.home_team}>{match.home_team}</option>
+              <option value={match.away_team}>{match.away_team}</option>
+            </select>
+          </div>
+        )}
+
         <div className="team-name">{match.away_team}</div>
       </div>
 
       {match.is_finished && (
         <div className="match-result">
-          Resultado real: <strong>{match.home_score} - {match.away_score}</strong>
+          Resultado real:{' '}
+          <strong>
+            {match.home_score} - {match.away_score}
+          </strong>
         </div>
       )}
 
@@ -98,8 +143,15 @@ export default function MatchCard({ match, prediction, onSave, showPoints = fals
           >
             {saving ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar pronóstico'}
           </button>
+
           {saveError && (
-            <div style={{ color: 'var(--red, #e05a5a)', fontSize: '0.8rem', marginTop: '0.4rem' }}>
+            <div
+              style={{
+                color: 'var(--red, #e05a5a)',
+                fontSize: '0.8rem',
+                marginTop: '0.4rem',
+              }}
+            >
               ⚠️ {saveError}
             </div>
           )}
@@ -107,7 +159,9 @@ export default function MatchCard({ match, prediction, onSave, showPoints = fals
       )}
 
       {!editable && !match.is_finished && (
-        <div className="match-result">🔒 Partido en juego o bloqueado — no se puede editar</div>
+        <div className="match-result">
+          🔒 Partido en juego o bloqueado — no se puede editar
+        </div>
       )}
     </div>
   )

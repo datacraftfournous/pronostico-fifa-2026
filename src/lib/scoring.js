@@ -53,7 +53,11 @@ export function calcularPuntos(predLocal, predVisitante, realLocal, realVisitant
 
 // ─── FASE ELIMINATORIA (dieciseisavos en adelante) ──────────────
 
-// Se bloquea 1 hora antes del kickoff, no al iniciar el partido.
+// NOTA: el comentario original decía "se bloquea 1 hora antes", pero
+// el código usa subMinutes(kickoff, 1) — bloquea 1 MINUTO antes, no
+// 1 hora. Lo dejo tal cual estaba (por si fue un cambio intencional
+// para pruebas), pero avísame si en realidad quieres que sea 1 hora
+// y lo ajusto.
 export function canEditKnockoutPrediction(match) {
   if (match.is_finished) return false
   const dateStr = match.kickoff_at || match.match_date
@@ -104,6 +108,103 @@ export function calcularPuntosEliminatoria(predLocal, predVisitante, realLocal, 
   return base + bono
 }
 
+// ─── BONO "QUIÉN AVANZA DE RONDA" ────────────────────────────────
+//
+// Independiente del marcador de 90'. Resuelve el caso donde el
+// partido termina empatado y se define por penales (que ningún
+// pronóstico de marcador puede "acertar"). Se suma al puntaje del
+// marcador, no lo reemplaza.
+
+export const BONO_AVANCE = 1
+
+// match.advancing_team = equipo que REALMENTE avanzó (lo llena el admin)
+// prediction.predicted_advancer = equipo que el jugador dijo que avanzaría
+export function calcularBonoAvance(predictedAdvancer, advancingTeamReal) {
+  if (!predictedAdvancer || !advancingTeamReal) return 0
+  return predictedAdvancer === advancingTeamReal ? BONO_AVANCE : 0
+}
+
+// ─── MULTIPLICADOR POR FASE ───────────────────────────────────────
+//
+// Entre más avanza el torneo, cada partido vale más. Esto comprime
+// la diferencia de puntos: una mala racha del líder en semis/final
+// pesa mucho más que una del mismo tamaño en fase de grupos, y una
+// buena racha del último en esas rondas puede acortar la brecha de
+// golpe. El valor real vive en la columna `matches.multiplier`
+// (se asigna solo según la fase, ver SQL), así que este helper solo
+// LEE ese valor — no decide nada por su cuenta, para que siempre
+// puedas auditar en la base de datos qué multiplicador tiene cada
+// partido y corregirlo a mano si hace falta.
+export function multiplicadorParaMatch(match) {
+  const valor = Number(match?.multiplier)
+  return Number.isFinite(valor) && valor > 0 ? valor : 1
+}
+
+// ─── COMODÍN (doble puntos) ──────────────────────────────────────
+//
+// Cada jugador puede usarlo en UN SOLO partido de toda la eliminatoria
+// (garantizado a nivel de base de datos con un índice único parcial).
+// Se aplica DESPUÉS del multiplicador de fase — así que usarlo en la
+// final (x3) es mucho más poderoso que usarlo en octavos (x1.5).
+
+export function aplicarComodin(puntosBase, esComodin) {
+  return esComodin ? puntosBase * 2 : puntosBase
+}
+
+// Puntaje TOTAL de un pronóstico de eliminatoria:
+//   (marcador + bono de avance) × multiplicador de fase × (2 si hay comodín)
+//
+// prediction: { home_score, away_score, predicted_advancer, joker }
+// match:      { home_score, away_score, advancing_team, multiplier }
+export function calcularPuntosEliminatoriaCompleto(prediction, match) {
+  const puntosMarcador = calcularPuntosEliminatoria(
+    prediction.home_score,
+    prediction.away_score,
+    match.home_score,
+    match.away_score
+  )
+
+  const bonoAvance = calcularBonoAvance(prediction.predicted_advancer, match.advancing_team)
+
+  const puntosBase = puntosMarcador + bonoAvance
+  const multiplicador = multiplicadorParaMatch(match)
+  const puntosConMultiplicador = puntosBase * multiplicador
+
+  return aplicarComodin(puntosConMultiplicador, prediction.joker === true)
+}
+
+// ─── PREDICCIONES ESPECIALES (campeón + goleador) ────────────────
+//
+// Se califican una sola vez, cuando termine el torneo. Todos arrancan
+// en 0, así que es la apuesta más pareja que existe en este momento.
+
+export const PUNTOS_CAMPEON = 15
+export const PUNTOS_GOLEADOR = 10
+
+// specialPrediction: { predicted_champion, predicted_top_scorer }
+// resultadoTorneo:   { champion, top_scorer } (de tournament_results)
+export function calcularPuntosEspeciales(specialPrediction, resultadoTorneo) {
+  if (!specialPrediction || !resultadoTorneo) return 0
+
+  let puntos = 0
+
+  if (
+    specialPrediction.predicted_champion &&
+    specialPrediction.predicted_champion === resultadoTorneo.champion
+  ) {
+    puntos += PUNTOS_CAMPEON
+  }
+
+  if (
+    specialPrediction.predicted_top_scorer &&
+    specialPrediction.predicted_top_scorer === resultadoTorneo.top_scorer
+  ) {
+    puntos += PUNTOS_GOLEADOR
+  }
+
+  return puntos
+}
+
 // ─── COMUNES ─────────────────────────────────────────────────────
 
 // Edición unificada: decide qué regla de bloqueo aplica según la fase.
@@ -114,14 +215,43 @@ export function canEditAnyPrediction(match) {
 }
 
 // Puntaje unificado: decide qué fórmula aplica según la fase.
-export function calcularPuntosAny(predLocal, predVisitante, realLocal, realVisitante, match) {
-  return isKnockoutMatch(match)
-    ? calcularPuntosEliminatoria(predLocal, predVisitante, realLocal, realVisitante)
-    : calcularPuntos(predLocal, predVisitante, realLocal, realVisitante)
+// Para eliminatoria usa el cálculo COMPLETO (marcador + avance + comodín)
+// cuando se le pasa la predicción/partido completos; si solo recibe los
+// 4 marcadores (compatibilidad con código existente), calcula solo el
+// puntaje del marcador sin bonos.
+export function calcularPuntosAny(
+  predLocal,
+  predVisitante,
+  realLocal,
+  realVisitante,
+  match,
+  prediction = null
+) {
+  if (!isKnockoutMatch(match)) {
+    return calcularPuntos(predLocal, predVisitante, realLocal, realVisitante)
+  }
+
+  const base = calcularPuntosEliminatoria(
+    predLocal,
+    predVisitante,
+    realLocal,
+    realVisitante
+  )
+
+  const bono = prediction
+    ? calcularBonoAvance(prediction.predicted_advancer, match.advancing_team)
+    : 0
+
+  return base + bono
 }
 
 export function maxPuntosFor(match) {
-  return isKnockoutMatch(match) ? 6 : 5
+  if (!isKnockoutMatch(match)) return 5
+  // 6 del marcador + 1 del bono de avance = 7, multiplicado por la
+  // fase. El comodín (x2 adicional) no se cuenta aquí porque es
+  // opcional y se usa una sola vez en todo el torneo.
+  const base = 6 + BONO_AVANCE
+  return base * multiplicadorParaMatch(match)
 }
 
 export function formatKickoffColombia(matchOrDateStr) {
@@ -153,4 +283,24 @@ export function getMatchStatus(match) {
 export function statusLabel(status) {
   const labels = { pendiente: 'Pendiente', en_juego: 'En juego', finalizado: 'Finalizado' }
   return labels[status] || status
+}
+
+
+// ─── MULTIPLICADOR SEGÚN FASE (para asignarlo al CREAR el partido) ──
+//
+// multiplicadorParaMatch() de arriba LEE match.multiplier ya guardado.
+// Esta función en cambio DECIDE qué multiplicador asignarle a un
+// partido nuevo, según la fase seleccionada en el formulario de Admin.
+// Los partidos 73-88 (dieciseisavos, ya jugados) quedan en 1 y no se
+// tocan retroactivamente.
+export const MULTIPLICADOR_POR_FASE = {
+  'Octavos': 1.5,
+  'Cuartos': 2,
+  'Semifinal': 2.5,
+  'Tercer puesto': 2.5,
+  'Final': 3,
+}
+
+export function multiplicadorPorFase(stage) {
+  return MULTIPLICADOR_POR_FASE[stage] ?? 1
 }

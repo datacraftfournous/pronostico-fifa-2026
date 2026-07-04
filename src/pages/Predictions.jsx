@@ -63,7 +63,7 @@ export default function Predictions() {
   // Fase de grupos sigue bloqueada por completo (ya cerrada).
   // IMPORTANTE: comparamos con String() (no ===) porque matchId puede
   // llegar como string desde el input/evento, mientras match.id es number.
-  async function handleSave(matchId, homeScore, awayScore) {
+  async function handleSave(matchId, homeScore, awayScore, predictedAdvancer) {
     const match = matches.find((m) => String(m.id) === String(matchId))
 
     if (!match) {
@@ -87,6 +87,7 @@ export default function Predictions() {
         .update({
           home_score: homeScore,
           away_score: awayScore,
+          predicted_advancer: predictedAdvancer,
         })
         .eq('id', existing.id)
 
@@ -97,7 +98,12 @@ export default function Predictions() {
 
       setPredictions((prev) => ({
         ...prev,
-        [realMatchId]: { ...existing, home_score: homeScore, away_score: awayScore },
+        [realMatchId]: {
+          ...existing,
+          home_score: homeScore,
+          away_score: awayScore,
+          predicted_advancer: predictedAdvancer,
+        },
       }))
       return { success: true }
     } else {
@@ -108,6 +114,7 @@ export default function Predictions() {
           match_id: realMatchId,
           home_score: homeScore,
           away_score: awayScore,
+          predicted_advancer: predictedAdvancer,
         })
         .select()
         .single()

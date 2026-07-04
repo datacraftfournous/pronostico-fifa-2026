@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, usernameToEmail } from '../lib/supabase'
-import { calcularPuntosAny, formatKickoffColombia } from '../lib/scoring'
+import { calcularPuntosAny, formatKickoffColombia, multiplicadorPorFase } from '../lib/scoring'
+import { tryCreateNextMatch } from '../lib/bracket'
 
 export default function Admin() {
   const [tab, setTab] = useState('resultados')
@@ -25,7 +26,9 @@ export default function Admin() {
   const [resultMatchId, setResultMatchId] = useState('')
   const [resultHome, setResultHome] = useState('')
   const [resultAway, setResultAway] = useState('')
+  const [advancingTeam, setAdvancingTeam] = useState('')
   const [showFinished, setShowFinished] = useState(false)
+  const [resultStage, setResultStage] = useState('')
 
   useEffect(() => {
     loadData()
@@ -89,6 +92,7 @@ export default function Admin() {
       away_team: awayTeam,
       stage,
       kickoff_at: kickoff,
+      multiplier: multiplicadorPorFase(stage),   // 👈 NUEVO
     })
 
     if (insertError) {
@@ -110,7 +114,27 @@ export default function Admin() {
     const awayScore = parseInt(resultAway, 10)
     const matchId = resultMatchId
 
+    const knockoutStages = [
+      'Dieciseisavos de final',
+      'Octavos',
+      'Cuartos',
+      'Semifinal',
+      'Tercer puesto',
+      'Final',
+    ]
+
     const match = matches.find((m) => String(m.id) === String(matchId))
+
+    if (
+      match &&
+      knockoutStages.includes(match.stage) &&
+      homeScore === awayScore &&
+      !advancingTeam
+    ) {
+      setError('Debes seleccionar el equipo que avanza.')
+      return
+    }
+
 
     if (!match) {
       setError('No se encontró el partido seleccionado')
@@ -122,11 +146,22 @@ export default function Admin() {
       return
     }
 
+    let winner = null
+
+    if (homeScore > awayScore) {
+      winner = match.home_team
+    } else if (awayScore > homeScore) {
+      winner = match.away_team
+    } else {
+      winner = advancingTeam
+    }
     const { data: updatedMatch, error: updateError } = await supabase
       .from('matches')
+
       .update({
         home_score: homeScore,
         away_score: awayScore,
+        advancing_team: winner,
         is_finished: true,
       })
       .eq('id', matchId)
@@ -171,7 +206,8 @@ export default function Admin() {
         predAway,
         updatedMatch.home_score,
         updatedMatch.away_score,
-        updatedMatch
+        updatedMatch,
+        pred
       )
 
       const { data: savedRow, error: pointsError } = await supabase
@@ -210,11 +246,29 @@ export default function Admin() {
     setResultMatchId('')
     setResultHome('')
     setResultAway('')
+    setAdvancingTeam('')
     loadData()
-  }
 
+    await tryCreateNextMatch(updatedMatch.bracket_slot)
+    // ─── BRACKET AUTOMÁTICO ───
+
+    const stageOrder = [
+      'Dieciseisavos de final',
+      'Octavos',
+      'Cuartos',
+      'Semifinal',
+      'Final',
+    ]
+  }
   const pendingMatches = matches.filter((m) => !m.is_finished)
   const finishedMatches = matches.filter((m) => m.is_finished)
+  const filteredPendingMatches = pendingMatches.filter(
+    (m) => !resultStage || m.stage === resultStage
+  )
+
+  const filteredFinishedMatches = finishedMatches.filter(
+    (m) => !resultStage || m.stage === resultStage
+  )
 
   return (
     <div>
@@ -227,7 +281,7 @@ export default function Admin() {
       <div className="tabs">
         {[
           ['resultados', 'Resultados'],
-          ['partidos', 'Partidos'],
+          // ['partidos', 'Partidos'],
           ['usuarios', 'Usuarios'],
         ].map(([key, label]) => (
           <button
@@ -260,6 +314,28 @@ export default function Admin() {
                 Recalcular un partido ya finalizado
               </label>
             </div>
+
+            <div className="form-group">
+              <label>Fase</label>
+              <select
+                value={resultStage}
+                onChange={(e) => {
+                  setResultStage(e.target.value)
+                  setResultMatchId('')
+                }}
+              >
+                <option value="">Todas las fases</option>
+
+                {[...new Set(matches.map((m) => m.stage))]
+                  .sort()
+                  .map((stage) => (
+                    <option key={stage} value={stage}>
+                      {stage}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
             <div className="form-group">
               <label>Partido</label>
               <select
@@ -273,12 +349,13 @@ export default function Admin() {
                   if (m && showFinished) {
                     setResultHome(String(m.home_score ?? ''))
                     setResultAway(String(m.away_score ?? ''))
+                    setAdvancingTeam(m.advancing_team ?? '')
                   }
                 }}
                 required
               >
                 <option value="">Selecciona un partido</option>
-                {(showFinished ? finishedMatches : pendingMatches).map((m) => (
+                {(showFinished ? filteredFinishedMatches : filteredPendingMatches).map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.home_team} vs {m.away_team} — {formatKickoffColombia(m.kickoff_at)}
                     {showFinished ? ` (actual: ${m.home_score}-${m.away_score})` : ''}
@@ -308,13 +385,54 @@ export default function Admin() {
                 />
               </div>
             </div>
+
+            {resultMatchId &&
+              (() => {
+                const m = matches.find(mm => String(mm.id) === String(resultMatchId))
+
+                const knockoutStages = [
+                  'Dieciseisavos de final',
+                  'Octavos',
+                  'Cuartos',
+                  'Semifinal',
+                  'Tercer puesto',
+                  'Final',
+                ]
+
+                if (
+                  !m ||
+                  !knockoutStages.includes(m.stage) ||
+                  resultHome === '' ||
+                  resultAway === '' ||
+                  Number(resultHome) !== Number(resultAway)
+                ) {
+                  return null
+                }
+
+                return (
+                  <div className="form-group">
+                    <label>Equipo que avanza</label>
+                    <select
+                      value={advancingTeam}
+                      onChange={(e) => setAdvancingTeam(e.target.value)}
+                      required
+                    >
+                      <option value="">Selecciona el clasificado</option>
+                      <option value={m.home_team}>{m.home_team}</option>
+                      <option value={m.away_team}>{m.away_team}</option>
+                    </select>
+                  </div>
+                )
+              })()}
+
+
             <button type="submit" className="btn btn-gold">
               Guardar resultado y calcular puntos
             </button>
           </form>
         </div>
       )}
-
+      {/*
       {tab === 'partidos' && (
         <div className="admin-section card">
           <h2>Agregar partido</h2>
@@ -366,6 +484,8 @@ export default function Admin() {
           </div>
         </div>
       )}
+
+*/}
 
       {tab === 'usuarios' && (
         <div className="admin-section card">
