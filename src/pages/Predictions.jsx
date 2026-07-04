@@ -28,6 +28,9 @@ export default function Predictions() {
   const [specialMessage, setSpecialMessage] = useState('')
   const [specialError, setSpecialError] = useState('')
 
+  // Jugadores disponibles para elegir como goleador (nombre + país + posición)
+  const [players, setPlayers] = useState([])
+
   const [statusFilter, setStatusFilter] = useState('todos')
   const [groupFilter, setGroupFilter] = useState('todos')
   const [dateFilter, setDateFilter] = useState('todas')
@@ -50,7 +53,23 @@ export default function Predictions() {
   useEffect(() => {
     loadData()
     loadSpecialPrediction()
+    loadPlayers()
   }, [user])
+
+  async function loadPlayers() {
+    const { data, error } = await supabase
+      .from('worldcup_players')
+      .select('id, player_name, team_name, position')
+      .eq('is_qualified', true)
+      .order('player_name', { ascending: true })
+
+    if (error) {
+      console.error('Error cargando jugadores', error)
+      return
+    }
+
+    setPlayers(data || [])
+  }
 
   async function loadSpecialPrediction() {
     if (!user) return
@@ -117,13 +136,17 @@ export default function Predictions() {
     setSpecialMessage('¡Predicción guardada!')
   }
 
-  // Equipos disponibles para elegir campeón (derivados de los partidos ya cargados).
+  // Solo pueden ser "campeón" los equipos que siguen vivos, es decir, los
+  // que están jugando la fase de Octavos (ajusta el string si tu columna
+  // stage usa otro nombre exacto para esa fase).
   const teams = useMemo(() => {
     const set = new Set()
-    matches.forEach((m) => {
-      if (m.home_team) set.add(m.home_team)
-      if (m.away_team) set.add(m.away_team)
-    })
+    matches
+      .filter((m) => m.stage === 'Octavos')
+      .forEach((m) => {
+        if (m.home_team) set.add(m.home_team)
+        if (m.away_team) set.add(m.away_team)
+      })
     return [...set].sort()
   }, [matches])
 
@@ -375,14 +398,19 @@ export default function Predictions() {
 
             <div className="form-group">
               <label>Goleador</label>
-              <input
-                type="text"
+              <select
                 value={topScorerPick}
                 onChange={(e) => setTopScorerPick(e.target.value)}
                 disabled={!specialEditable}
-                placeholder="Nombre del jugador"
                 required
-              />
+              >
+                <option value="">Selecciona un jugador</option>
+                {players.map((p) => (
+                  <option key={p.id} value={p.player_name}>
+                    {p.player_name} ({p.team_name} - {p.position})
+                  </option>
+                ))}
+              </select>
             </div>
 
             <button
