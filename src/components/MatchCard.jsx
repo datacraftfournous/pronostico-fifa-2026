@@ -17,6 +17,16 @@ const FLAGS = {
   Canadá: 'ca',
   Chile: 'cl',
   Colombia: 'co',
+  'Costa de Marfil': 'ci',
+  Curazao: 'cw',
+  'Cabo Verde': 'cv',
+  Catar: 'qa',
+  Haití: 'ht',
+  Jordania: 'jo',
+  'Nueva Zelanda': 'nz',
+  Uzbekistán: 'uz',
+  Sudáfrica: 'za',
+  Argelia: 'dz',
   Corea: 'kr',
   'Costa Rica': 'cr',
   Croacia: 'hr',
@@ -49,6 +59,39 @@ const FLAGS = {
   Túnez: 'tn',
   Uruguay: 'uy',
 }
+function TeamFlag({ team }) {
+  const code = FLAGS[team]
+
+  // Si no tenemos el código del país, mostramos un placeholder en vez de
+  // un ícono de imagen rota.
+  if (!code) {
+    return (
+      <div className="team-flag team-flag-fallback" aria-label={team} title={team}>
+        🏳️
+      </div>
+    )
+  }
+
+  return (
+    <img
+      className="team-flag"
+      src={`https://flagcdn.com/w80/${code}.png`}
+      alt={team}
+      // Si la URL falla (código incorrecto, CDN caído, etc.) mostramos el
+      // mismo placeholder en lugar del ícono de imagen rota del navegador.
+      onError={(e) => {
+        e.currentTarget.replaceWith(
+          Object.assign(document.createElement('div'), {
+            className: 'team-flag team-flag-fallback',
+            title: team,
+            textContent: '🏳️',
+          })
+        )
+      }}
+    />
+  )
+}
+
 export default function MatchCard({
   match,
   prediction,
@@ -129,11 +172,7 @@ export default function MatchCard({
 
       <div className="match-teams">
         <div className="team">
-          <img
-            className="team-flag"
-            src={`https://flagcdn.com/w80/${FLAGS[match.home_team]}.png`}
-            alt={match.home_team}
-          />
+          <TeamFlag team={match.home_team} />
           <div className="team-name">{match.home_team}</div>
         </div>
 
@@ -161,30 +200,26 @@ export default function MatchCard({
           />
         </div>
 
-        {editable && isKnockoutMatch(match) && (
-          <div className="form-group" style={{ marginTop: '0.5rem' }}>
-            <label>Equipo que clasifica</label>
-            <select
-              value={advancer}
-              onChange={(e) => setAdvancer(e.target.value)}
-              disabled={!editable}
-            >
-              <option value="">Selecciona clasificado</option>
-              <option value={match.home_team}>{match.home_team}</option>
-              <option value={match.away_team}>{match.away_team}</option>
-            </select>
-          </div>
-        )}
-
         <div className="team">
-          <img
-            className="team-flag"
-            src={`https://flagcdn.com/w80/${FLAGS[match.away_team]}.png`}
-            alt={match.away_team}
-          />
+          <TeamFlag team={match.away_team} />
           <div className="team-name">{match.away_team}</div>
         </div>
       </div>
+
+      {editable && isKnockoutMatch(match) && (
+        <div className="form-group advancer-group">
+          <label>Equipo que clasifica</label>
+          <select
+            value={advancer}
+            onChange={(e) => setAdvancer(e.target.value)}
+            disabled={!editable}
+          >
+            <option value="">Selecciona clasificado</option>
+            <option value={match.home_team}>{match.home_team}</option>
+            <option value={match.away_team}>{match.away_team}</option>
+          </select>
+        </div>
+      )}
 
       {editable && jokerAplica && (
         <div
