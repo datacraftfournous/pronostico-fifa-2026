@@ -348,15 +348,35 @@ h3,
 
 .match-teams {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 1rem;
+  grid-template-columns: 110px auto 110px;
+  align-items: start;
+  justify-content: center;
+  gap: 0.75rem;
   text-align: center;
+  margin: 0.5rem 0;
 }
 
 .team-name {
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 120px;
+}
+
+.team-flag {
+  width: 42px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
 }
 
 .score-inputs {
@@ -1087,15 +1107,15 @@ h3,
   border-bottom: 2px solid #ffd700;
 }
 
-.hero-banner-image{
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-    object-fit:cover;
+.hero-banner-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 
-    /* Ajusta la posición de la imagen */
-    object-position:center 35%;
+  /* Ajusta la posición de la imagen */
+  object-position: center 35%;
 }
 
 .app-header::before {
@@ -1133,8 +1153,9 @@ h3,
   height: 84px;
   border-radius: 16px;
   object-fit: contain;
-  
+
 }
+
 .brand-text h1 {
   margin: 0;
   font-size: 1.5rem;
@@ -1188,22 +1209,23 @@ h3,
   font-weight: 700;
 }
 
-.competition-banner{
-    align-self:center;
-    margin-bottom:50px;   /* antes 24px */
+.competition-banner {
+  align-self: center;
+  margin-bottom: 50px;
+  /* antes 24px */
 
-    padding:12px 36px;
-    border-radius:40px;
+  padding: 12px 36px;
+  border-radius: 40px;
 
-    background:rgba(0,0,0,.55);
-    border:1px solid rgba(255,215,0,.7);
+  background: rgba(0, 0, 0, .55);
+  border: 1px solid rgba(255, 215, 0, .7);
 
-    backdrop-filter:blur(10px);
+  backdrop-filter: blur(10px);
 
-    color:#ffd700;
-    font-size:1.25rem;
-    font-weight:700;
-    letter-spacing:2px;
+  color: #ffd700;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
 
 .user-bar {
@@ -1219,51 +1241,51 @@ h3,
 
 @media (max-width: 768px) {
 
-  .app-main{
-    padding:12px;
+  .app-main {
+    padding: 12px;
   }
 
-  .card{
-    padding:14px;
+  .card {
+    padding: 14px;
   }
 
-  .ranking-table{
-    display:block;
-    overflow-x:auto;
-    white-space:nowrap;
+  .ranking-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
   }
 
-  .pivot-table{
-    display:block;
-    overflow-x:auto;
-    white-space:nowrap;
+  .pivot-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
   }
 
-  .match-teams{
-    grid-template-columns:1fr;
-    gap:12px;
+  .match-teams {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
-  .score-inputs{
-    justify-content:center;
+  .score-inputs {
+    justify-content: center;
   }
 
-  .analytics-grid{
-    grid-template-columns:1fr;
+  .analytics-grid {
+    grid-template-columns: 1fr;
   }
 
-  .analytics-kpi-grid{
-    grid-template-columns:1fr 1fr;
+  .analytics-kpi-grid {
+    grid-template-columns: 1fr 1fr;
   }
 
-  .app-nav{
-    padding:12px;
-    gap:8px;
+  .app-nav {
+    padding: 12px;
+    gap: 8px;
   }
 
-  .nav-link{
-    font-size:.82rem;
-    padding:10px 14px;
+  .nav-link {
+    font-size: .82rem;
+    padding: 10px 14px;
   }
 
   .app-header {
@@ -1278,7 +1300,7 @@ h3,
     padding: 16px 18px;
   }
 
-.user-bar {
+  .user-bar {
     padding: 8px 12px 0;
   }
 
@@ -1311,7 +1333,7 @@ h3,
     gap: 4px;
   }
 
- .competition-banner {
+  .competition-banner {
     margin-top: auto;
     margin-bottom: 12px;
     font-size: 0.85rem;
@@ -1321,8 +1343,8 @@ h3,
 
 }
 
-.user-info{
-  line-height:1.2;
+.user-info {
+  line-height: 1.2;
 }
 
 /* ================= FRANJA DE PARTIDOS DEL DÍA ================= */
@@ -1372,8 +1394,15 @@ h3,
 }
 
 @keyframes live-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
 }
 
 .ft-tag {

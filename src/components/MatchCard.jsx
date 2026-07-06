@@ -8,6 +8,47 @@ import {
   isKnockoutMatch,
 } from '../lib/scoring'
 
+const FLAGS = {
+  Argentina: 'ar',
+  Australia: 'au',
+  Bélgica: 'be',
+  Bolivia: 'bo',
+  Brasil: 'br',
+  Canadá: 'ca',
+  Chile: 'cl',
+  Colombia: 'co',
+  Corea: 'kr',
+  'Costa Rica': 'cr',
+  Croacia: 'hr',
+  Dinamarca: 'dk',
+  Ecuador: 'ec',
+  Egipto: 'eg',
+  España: 'es',
+  'Estados Unidos': 'us',
+  Francia: 'fr',
+  Gales: 'gb-wls',
+  Alemania: 'de',
+  Ghana: 'gh',
+  Inglaterra: 'gb-eng',
+  Irán: 'ir',
+  Italia: 'it',
+  Japón: 'jp',
+  Marruecos: 'ma',
+  México: 'mx',
+  Nigeria: 'ng',
+  Noruega: 'no',
+  'Países Bajos': 'nl',
+  Panamá: 'pa',
+  Paraguay: 'py',
+  Perú: 'pe',
+  Polonia: 'pl',
+  Portugal: 'pt',
+  Senegal: 'sn',
+  Serbia: 'rs',
+  Suiza: 'ch',
+  Túnez: 'tn',
+  Uruguay: 'uy',
+}
 export default function MatchCard({
   match,
   prediction,
@@ -39,10 +80,10 @@ export default function MatchCard({
     if (home === '' || away === '') return
 
     // En toda eliminatoria debe quedar guardado el clasificado
-if (isKnockout && !advancer) {
-  setSaveError('Debes seleccionar el equipo que clasifica')
-  return
-}
+    if (isKnockout && !advancer) {
+      setSaveError('Debes seleccionar el equipo que clasifica')
+      return
+    }
 
     setSaving(true)
     setSaveError('')
@@ -87,7 +128,14 @@ if (isKnockout && !advancer) {
       </div>
 
       <div className="match-teams">
-        <div className="team-name">{match.home_team}</div>
+        <div className="team">
+          <img
+            className="team-flag"
+            src={`https://flagcdn.com/w80/${FLAGS[match.home_team]}.png`}
+            alt={match.home_team}
+          />
+          <div className="team-name">{match.home_team}</div>
+        </div>
 
         <div className="score-inputs">
           <input
@@ -113,7 +161,7 @@ if (isKnockout && !advancer) {
           />
         </div>
 
-       {editable && isKnockoutMatch(match) && (
+        {editable && isKnockoutMatch(match) && (
           <div className="form-group" style={{ marginTop: '0.5rem' }}>
             <label>Equipo que clasifica</label>
             <select
@@ -128,7 +176,14 @@ if (isKnockout && !advancer) {
           </div>
         )}
 
-        <div className="team-name">{match.away_team}</div>
+        <div className="team">
+          <img
+            className="team-flag"
+            src={`https://flagcdn.com/w80/${FLAGS[match.away_team]}.png`}
+            alt={match.away_team}
+          />
+          <div className="team-name">{match.away_team}</div>
+        </div>
       </div>
 
       {editable && jokerAplica && (
