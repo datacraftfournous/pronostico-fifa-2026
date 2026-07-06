@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import MatchCard from '../components/MatchCard'
@@ -45,6 +45,10 @@ export default function Predictions() {
   // Acceso rápido: Fase (match.stage real, igual que en Admin) -> Partido
   const [quickStage, setQuickStage] = useState('')
   const [quickMatchId, setQuickMatchId] = useState('')
+
+  // Para autoseleccionar la fase "en curso" una sola vez al cargar, sin
+  // pelearse con el usuario si después decide limpiar el filtro a mano.
+  const didAutoSelectStage = useRef(false)
 
   function getLocalDate(dateString) {
     return new Date(dateString).toLocaleDateString('en-CA', {
@@ -297,11 +301,60 @@ export default function Predictions() {
     }
   }
 
+  // Orden real del torneo para las fases de eliminatoria. Todo lo que no
+  // aparezca aquí (las fases de grupos: "Grupo A", "Grupo B"...) se trata
+  // como fase de grupos y va siempre antes, ordenada alfabéticamente.
+  const KNOCKOUT_STAGE_ORDER = [
+    'Dieciseisavos de final',
+    'Octavos',
+    'Cuartos',
+    'Semifinal',
+    'Tercer puesto',
+    'Final',
+  ]
+
   // Fases reales tal como están guardadas en match.stage (ej: "Grupo A",
-  // "Octavos", "Semifinal"...), igual que el combo "Fase" del Admin.
+  // "Octavos", "Semifinal"...), igual que el combo "Fase" del Admin, pero
+  // ordenadas como se juega el torneo: primero todas las de grupos, luego
+  // Dieciseisavos, Octavos, Cuartos, Semifinal, Tercer puesto y Final.
   const availableStages = useMemo(() => {
-    return [...new Set(matches.map((m) => m.stage))].sort()
+    const stagesInUse = [...new Set(matches.map((m) => m.stage))]
+
+    const groupStages = stagesInUse
+      .filter((s) => !KNOCKOUT_STAGE_ORDER.includes(s))
+      .sort()
+
+    const knockoutStages = KNOCKOUT_STAGE_ORDER.filter((s) =>
+      stagesInUse.includes(s)
+    )
+
+    return [...groupStages, ...knockoutStages]
   }, [matches])
+
+  // La fase "en curso": la del próximo partido en orden de fecha que
+  // todavía no se ha cerrado (is_finished = false). Si el torneo va en
+  // Octavos, por ejemplo, esto va a devolver "Octavos" apenas alguno de
+  // esos partidos quede pendiente.
+  const currentStage = useMemo(() => {
+    const nextPending = [...matches]
+      .filter((m) => !m.is_finished)
+      .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))[0]
+
+    return nextPending?.stage || null
+  }, [matches])
+
+  // Autoseleccionamos esa fase en el acceso rápido la primera vez que la
+  // calculamos, para que el usuario abra la pantalla y ya vea de una vez
+  // los partidos de la fase que se está jugando. Si después el usuario
+  // limpia el filtro a mano (botón "Ver todos los partidos de nuevo"),
+  // respetamos su elección y no se lo volvemos a imponer.
+  useEffect(() => {
+    if (didAutoSelectStage.current) return
+    if (!currentStage) return
+
+    setQuickStage(currentStage)
+    didAutoSelectStage.current = true
+  }, [currentStage])
 
   // Partidos de la fase elegida en el acceso rápido, ordenados por fecha.
   const quickStageMatches = useMemo(() => {
@@ -555,7 +608,7 @@ export default function Predictions() {
                 <option value="">Selecciona una fase</option>
                 {availableStages.map((stage) => (
                   <option key={stage} value={stage}>
-                    {stage}
+                    {stage === currentStage ? `⚡ ${stage} (en curso)` : stage}
                   </option>
                 ))}
               </select>
