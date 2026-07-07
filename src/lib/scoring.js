@@ -184,7 +184,7 @@ export const PUNTOS_GOLEADOR = 15
 // Fecha límite para elegir/editar campeón y goleador. Después de esta
 // fecha y hora (zona Colombia) el formulario ya no debe permitir
 // guardar ni cambiar estas dos predicciones.
-export const SPECIAL_PREDICTIONS_DEADLINE = '2026-07-07T23:59:59-05:00'
+export const SPECIAL_PREDICTIONS_DEADLINE = '2026-07-08T23:59:59-05:00'
 
 export function canEditSpecialPrediction() {
   const now = nowInColombia()
