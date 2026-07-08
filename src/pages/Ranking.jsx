@@ -11,6 +11,91 @@ const APUESTA_POR_JUGADOR = 20000
 const BOTE_TOTAL = TOTAL_JUGADORES * APUESTA_POR_JUGADOR
 const PORCENTAJES_PREMIO = [0.5, 0.3, 0.2] // 1°, 2°, 3°
 
+// ───── Marquesina con el ranking de jugadores ─────
+// Ticker horizontal que se desplaza en loop infinito mostrando
+// puesto, nombre y puntos de cada jugador. Se duplica la lista
+// una vez para que el scroll sea continuo (sin salto visible).
+function MarqueeRanking({ data }) {
+  if (!data || data.length === 0) return null
+
+  const items = [...data, ...data] // duplicado para loop continuo
+
+  return (
+    <div
+      className="marquee-ranking"
+      style={{
+        overflow: 'hidden',
+        borderRadius: '0.6rem',
+        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(255,255,255,0.03)',
+        marginBottom: '1.25rem',
+        position: 'relative',
+      }}
+    >
+      <style>{`
+        @keyframes marquee-scroll {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .marquee-ranking:hover .marquee-track {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      <div
+        className="marquee-track"
+        style={{
+          display: 'flex',
+          width: 'max-content',
+          animation: `marquee-scroll ${Math.max(items.length * 2.2, 12)}s linear infinite`,
+        }}
+      >
+        {items.map((player, i) => (
+          <div
+            key={`${player.id ?? player.display_name}-${i}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.6rem 1.25rem',
+              whiteSpace: 'nowrap',
+              borderRight: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <span
+              style={{
+                fontSize: player.puesto <= 3 ? '1rem' : '0.8rem',
+                color: player.puesto <= 3 ? undefined : 'var(--text-muted)',
+              }}
+            >
+              {medalForRank(player.puesto)}
+            </span>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+              {player.display_name}
+            </span>
+            <span
+              style={{
+                fontSize: '0.8rem',
+                color: 'var(--gold)',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {player.total} pts
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Premio en pesos para un puesto dado (top 3), o null si no aplica.
+function calcularPremio(puesto) {
+  const pct = PORCENTAJES_PREMIO[puesto - 1]
+  if (!pct) return null
+  return BOTE_TOTAL * pct
+}
+
 function medalForRank(rank) {
   if (rank === 1) return '🥇'
   if (rank === 2) return '🥈'
@@ -124,7 +209,6 @@ function calcularEstadisticas(predictions, matches, profiles) {
     if (!porJugador[nombre]) {
       porJugador[nombre] = {
         display_name: nombre,
-        has_paid: perfil.has_paid,
         jugados: 0,
         exactos: 0,
         ganador: 0,
@@ -163,29 +247,17 @@ function calcularEstadisticas(predictions, matches, profiles) {
 export default function Ranking() {
   const [standings, setStandings] = useState([])
   const [loading, setLoading] = useState(true)
-  // 'pagos' = ranking oficial que compite por el bote
-  // 'general' = clasificación de todos los jugadores por puntos
+  // 'ranking' = tabla única de posiciones (todos pagan, todos compiten por el bote)
   // 'analisis' = gráficos de aciertos
-  const [vista, setVista] = useState('pagos')
+  const [vista, setVista] = useState('ranking')
 
   const [statsJugadores, setStatsJugadores] = useState([])
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
   const [analisisCargado, setAnalisisCargado] = useState(false)
 
-  // Única fuente de verdad: el puesto se calcula SIEMPRE sobre TODOS
-  // los jugadores (pagaron o no), porque todos compitieron por igual.
-  // "standings" ya viene ordenado por total desc desde Supabase.
+  // Puesto real de cada jugador. "standings" ya viene ordenado por
+  // total desc desde Supabase.
   const rankingConPuestos = calcularPosiciones(standings)
-
-  // Clasificación general: todos, con su puesto real.
-  const clasificacionGeneral = rankingConPuestos
-
-  // Ranking de pagos: mismo puesto real, pero solo se muestran
-  // (y reciben premio) quienes ya pagaron. Si alguien sin pagar
-  // ocupa el puesto 2, verás 1° y luego 3° aquí — es intencional,
-  // refleja su posición real en el torneo.
-  const jugadoresPagos = rankingConPuestos.filter(p => p.has_paid)
-  const jugadoresPendientes = rankingConPuestos.filter(p => !p.has_paid)
 
   useEffect(() => {
     loadRanking()
@@ -204,7 +276,7 @@ export default function Ranking() {
       const [predsData, matchesData, profilesData] = await Promise.all([
         fetchAllRows('predictions', 'user_id, match_id, home_score, away_score'),
         fetchAllRows('matches', 'id, stage, home_score, away_score, is_finished'),
-        fetchAllRows('profiles', 'id, display_name, has_paid'),
+        fetchAllRows('profiles', 'id, display_name'),
       ])
 
       setStatsJugadores(
@@ -243,14 +315,8 @@ export default function Ranking() {
   function exportPDF() {
     const doc = new jsPDF()
 
-    const esVistaPagos = vista === 'pagos'
-    const datos = esVistaPagos ? jugadoresPagos : clasificacionGeneral
-    const titulo = esVistaPagos
-      ? 'Ranking Mundial FIFA 2026 (Pagos)'
-      : 'Clasificación General FIFA 2026 (Todos)'
-
     doc.setFontSize(22)
-    doc.text(titulo, 14, 20)
+    doc.text('Ranking Mundial FIFA 2026', 14, 20)
 
     doc.setFontSize(11)
     doc.text(
@@ -258,24 +324,24 @@ export default function Ranking() {
       14,
       28
     )
-
-    if (esVistaPagos) {
-      doc.text(
-        `Bote total: ${formatCOP(BOTE_TOTAL)} (${TOTAL_JUGADORES} jugadores x ${formatCOP(APUESTA_POR_JUGADOR)})`,
-        14,
-        35
-      )
-    }
+    doc.text(
+      `Bote total: ${formatCOP(BOTE_TOTAL)} (${TOTAL_JUGADORES} jugadores x ${formatCOP(APUESTA_POR_JUGADOR)})`,
+      14,
+      35
+    )
 
     autoTable(doc, {
-      startY: esVistaPagos ? 45 : 35,
-      head: esVistaPagos
-        ? [['Posición', 'Participante', 'Puntos', 'Premio']]
-        : [['Posición', 'Participante', 'Puntos', 'Pagó']],
-      body: datos.map((player) => esVistaPagos
-        ? [player.puesto, player.display_name, player.total, '—']
-        : [player.puesto, player.display_name, player.total, player.has_paid ? 'Sí' : 'No']
-      ),
+      startY: 45,
+      head: [['Posición', 'Participante', 'Puntos', 'Premio']],
+      body: rankingConPuestos.map((player) => {
+        const premio = calcularPremio(player.puesto)
+        return [
+          player.puesto,
+          player.display_name,
+          player.total,
+          premio != null ? formatCOP(premio) : '—',
+        ]
+      }),
       styles: {
         fontSize: 10,
       },
@@ -284,7 +350,7 @@ export default function Ranking() {
       },
     })
 
-    doc.save(esVistaPagos ? 'ranking-fifa-2026-pagos.pdf' : 'clasificacion-fifa-2026-general.pdf')
+    doc.save('ranking-fifa-2026.pdf')
   }
 
   if (loading) {
@@ -298,8 +364,6 @@ export default function Ranking() {
     )
   }
 
-  const filasAMostrar = vista === 'pagos' ? jugadoresPagos : clasificacionGeneral
-
   return (
     <div>
       <h2 className="page-title">🏆 Ranking</h2>
@@ -310,6 +374,9 @@ export default function Ranking() {
         {formatCOP(APUESTA_POR_JUGADOR)})
       </p>
 
+      {/* ───── Marquesina con el ranking ───── */}
+      <MarqueeRanking data={rankingConPuestos} />
+
       {/* ───── Selector de vista ───── */}
       <div
         style={{
@@ -319,17 +386,10 @@ export default function Ranking() {
         }}
       >
         <button
-          className={vista === 'pagos' ? 'btn btn-gold' : 'btn'}
-          onClick={() => setVista('pagos')}
+          className={vista === 'ranking' ? 'btn btn-gold' : 'btn'}
+          onClick={() => setVista('ranking')}
         >
-          💰 Ranking (Pagos) {jugadoresPagos.length}
-        </button>
-
-        <button
-          className={vista === 'general' ? 'btn btn-gold' : 'btn'}
-          onClick={() => setVista('general')}
-        >
-          📊 Clasificación General {standings.length}
+          🏆 Ranking {standings.length}
         </button>
 
         <button
@@ -339,22 +399,6 @@ export default function Ranking() {
           📈 Análisis
         </button>
       </div>
-
-      {vista === 'pagos' && jugadoresPendientes.length > 0 && (
-        <p
-          style={{
-            fontSize: '0.85rem',
-            color: 'var(--text-muted)',
-            marginBottom: '1rem',
-          }}
-        >
-          ⚠️ {jugadoresPendientes.length} jugador(es) sin pago registrado no
-          aparecen en esta lista (no reciben premio), pero sus puntos sí
-          cuentan para el puesto real de los demás — por eso puedes ver
-          saltos en la numeración (ej. 1°, luego 3°). Míralos todos en
-          "Clasificación General".
-        </p>
-      )}
 
       {vista !== 'analisis' && (
         <div
@@ -387,56 +431,50 @@ export default function Ranking() {
                 <th>#</th>
                 <th>Participante</th>
                 <th>Puntos</th>
-                {vista === 'pagos' ? <th>Premio</th> : <th>Pagó</th>}
+                <th>Premio</th>
               </tr>
             </thead>
 
             <tbody>
-              {filasAMostrar.map((player) => (
-                <tr key={player.id}>
-                  <td className="rank-medal">
-                    {medalForRank(player.puesto)}
-                  </td>
-
-                  <td>
-                    {player.display_name}
-
-                    {player.role === 'admin' && (
-                      <span
-                        style={{
-                          marginLeft: '0.5rem',
-                          fontSize: '0.75rem',
-                          color: 'var(--gold)',
-                        }}
-                      >
-                        (Admin)
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="rank-points">
-                    {player.total}
-                  </td>
-
-                  {vista === 'pagos' ? (
-                    <td
-                      className="rank-points"
-                      style={{ color: 'var(--text-muted)' }}
-                    >
-                      —
+              {rankingConPuestos.map((player) => {
+                const premio = calcularPremio(player.puesto)
+                return (
+                  <tr key={player.id}>
+                    <td className="rank-medal">
+                      {medalForRank(player.puesto)}
                     </td>
-                  ) : (
+
+                    <td>
+                      {player.display_name}
+
+                      {player.role === 'admin' && (
+                        <span
+                          style={{
+                            marginLeft: '0.5rem',
+                            fontSize: '0.75rem',
+                            color: 'var(--gold)',
+                          }}
+                        >
+                          (Admin)
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="rank-points">
+                      {player.total}
+                    </td>
+
                     <td
                       className="rank-points"
                       style={{
-                        color: player.has_paid ? 'var(--gold)' : 'var(--text-muted)',
+                        color: premio != null ? 'var(--gold)' : 'var(--text-muted)',
                       }}
                     >
-                      {player.has_paid ? '✅ Sí' : '❌ No'}
+                      {premio != null ? formatCOP(premio) : '—'}
                     </td>
-                  )}
-                </tr>
-              ))}
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
