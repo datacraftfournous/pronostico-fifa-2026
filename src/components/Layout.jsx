@@ -125,7 +125,7 @@ useEffect(() => {
           🎯 Predictions
         </NavLink>
 
-        <NavLink to="/points" end className={linkClass}>
+        <NavLink to="/points-breakdown" end className={linkClass}>
           🧮 Points Breakdown
         </NavLink>
 
