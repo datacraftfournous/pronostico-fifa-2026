@@ -317,3 +317,168 @@ export const MULTIPLICADOR_POR_FASE = {
 export function multiplicadorPorFase(stage) {
   return MULTIPLICADOR_POR_FASE[stage] ?? 1
 }
+
+// ─── DESGLOSE DE PUNTOS (para mostrarle al usuario CÓMO se calculó) ──
+//
+// Estas funciones NO reemplazan a calcularPuntos / calcularPuntosEliminatoria*.
+// Reutilizan exactamente la misma lógica paso a paso, pero en vez de
+// devolver solo el número final, devuelven cada componente por separado
+// (con una etiqueta en español lista para mostrar en la UI) para que la
+// suma de `items` + bonos siempre cuadre con lo que devuelven las
+// funciones de arriba. Si el día de mañana cambia una regla de puntaje,
+// hay que cambiarla en AMBOS lados (el cálculo y su desglose).
+
+// Desglose de fase de grupos. Espejo de calcularPuntos().
+export function desglosarPuntosGrupos(predLocal, predVisitante, realLocal, realVisitante) {
+  const items = []
+  let total = 0
+
+  const marcadorExacto = predLocal === realLocal && predVisitante === realVisitante
+  items.push({ label: 'Marcador exacto', puntos: marcadorExacto ? 1 : 0, logrado: marcadorExacto })
+  if (marcadorExacto) total += 1
+
+  const resPred = Math.sign(predLocal - predVisitante)
+  const resReal = Math.sign(realLocal - realVisitante)
+  const acertoGanador = resPred === resReal
+  items.push({ label: 'Acertó ganador/empate', puntos: acertoGanador ? 1 : 0, logrado: acertoGanador })
+  if (acertoGanador) total += 1
+
+  const acertoLocal = predLocal === realLocal
+  items.push({ label: `Acertó goles del local (${realLocal})`, puntos: acertoLocal ? 1 : 0, logrado: acertoLocal })
+  if (acertoLocal) total += 1
+
+  const acertoVisitante = predVisitante === realVisitante
+  items.push({ label: `Acertó goles del visitante (${realVisitante})`, puntos: acertoVisitante ? 1 : 0, logrado: acertoVisitante })
+  if (acertoVisitante) total += 1
+
+  const diffPred = predLocal - predVisitante
+  const diffReal = realLocal - realVisitante
+  const acertoDiferencia = acertoGanador && diffPred === diffReal
+  items.push({ label: 'Acertó diferencia de gol', puntos: acertoDiferencia ? 1 : 0, logrado: acertoDiferencia })
+  if (acertoDiferencia) total += 1
+
+  return { items, total }
+}
+
+// Desglose de fase eliminatoria. Espejo de calcularPuntosEliminatoria().
+export function desglosarPuntosEliminatoria(predLocal, predVisitante, realLocal, realVisitante) {
+  const diffPred = predLocal - predVisitante
+  const diffReal = realLocal - realVisitante
+
+  const signoCorrecto =
+    (diffPred > 0 && diffReal > 0) ||
+    (diffPred < 0 && diffReal < 0) ||
+    (diffPred === 0 && diffReal === 0)
+
+  if (!signoCorrecto) {
+    const acertoUnMarcador = predLocal === realLocal || predVisitante === realVisitante
+    const puntos = acertoUnMarcador ? 1.0 : 0.0
+    const items = [
+      { label: 'No acertó el resultado (ni ganador ni empate)', puntos: 0, logrado: false },
+      {
+        label: acertoUnMarcador ? 'Acertó uno de los dos marcadores' : 'No acertó ningún marcador',
+        puntos,
+        logrado: acertoUnMarcador,
+      },
+    ]
+    return { items, total: puntos, tipo: 'signo_incorrecto' }
+  }
+
+  const exacto = predLocal === realLocal && predVisitante === realVisitante
+  const unoExacto = (predLocal === realLocal) !== (predVisitante === realVisitante) // XOR
+
+  let base
+  let error
+  let tipoLabel
+  let tipo
+
+  if (exacto) {
+    base = 5.0
+    error = 0
+    tipoLabel = 'Marcador exacto'
+    tipo = 'exacto'
+  } else if (unoExacto) {
+    base = 3.0
+    error = Math.abs(predLocal - realLocal) + Math.abs(predVisitante - realVisitante)
+    tipoLabel = 'Acertó uno de los dos marcadores (con resultado correcto)'
+    tipo = 'uno_exacto'
+  } else {
+    base = 2.0
+    error = Math.abs(diffPred - diffReal)
+    tipoLabel = 'Acertó el resultado (ganador/empate), sin marcador exacto'
+    tipo = 'resultado'
+  }
+
+  const bonoPorError = { 0: 1.0, 1: 0.75, 2: 0.5, 3: 0.25 }
+  const bono = bonoPorError[error] ?? 0.0
+
+  const items = [
+    { label: 'Acertó el resultado (ganador/empate)', puntos: 0, logrado: true },
+    { label: tipoLabel, puntos: base, logrado: true },
+    { label: `Bono por margen de error (Δ=${error})`, puntos: bono, logrado: bono > 0 },
+  ]
+
+  return { items, total: base + bono, tipo }
+}
+
+// Desglose COMPLETO de fase de grupos (marcador + fase 1x, sin bonos
+// de eliminatoria). Se deja envuelto en la misma forma que el de
+// eliminatoria para que el componente de UI pueda tratarlos igual.
+export function desglosarPuntosGruposCompleto(prediction, match) {
+  const marcador = desglosarPuntosGrupos(
+    prediction.home_score,
+    prediction.away_score,
+    match.home_score,
+    match.away_score
+  )
+
+  return {
+    items: marcador.items,
+    puntosMarcador: marcador.total,
+    bonoAvance: 0,
+    puntosBase: marcador.total,
+    multiplicador: 1,
+    esComodin: false,
+    puntosConMultiplicador: marcador.total,
+    total: marcador.total,
+  }
+}
+
+// Desglose COMPLETO de fase eliminatoria:
+//   marcador (items) + bono de avance, luego × multiplicador de fase,
+//   luego × 2 si hubo comodín. Espejo de calcularPuntosEliminatoriaCompleto().
+export function desglosarPuntosEliminatoriaCompleto(prediction, match) {
+  const marcador = desglosarPuntosEliminatoria(
+    prediction.home_score,
+    prediction.away_score,
+    match.home_score,
+    match.away_score
+  )
+
+  const bonoAvance = calcularBonoAvance(prediction.predicted_advancer, match.advancing_team)
+  const multiplicador = multiplicadorParaMatch(match)
+  const esComodin = prediction.joker === true
+
+  const puntosBase = marcador.total + bonoAvance
+  const puntosConMultiplicador = puntosBase * multiplicador
+  const total = aplicarComodin(puntosConMultiplicador, esComodin)
+
+  return {
+    items: marcador.items,
+    puntosMarcador: marcador.total,
+    bonoAvance,
+    puntosBase,
+    multiplicador,
+    esComodin,
+    puntosConMultiplicador,
+    total,
+  }
+}
+
+// Desglose unificado: decide qué fórmula aplica según la fase.
+// Devuelve { items, puntosMarcador, bonoAvance, puntosBase, multiplicador, esComodin, puntosConMultiplicador, total }
+export function desglosarPuntosAny(prediction, match) {
+  return isKnockoutMatch(match)
+    ? desglosarPuntosEliminatoriaCompleto(prediction, match)
+    : desglosarPuntosGruposCompleto(prediction, match)
+}
