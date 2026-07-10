@@ -7,6 +7,7 @@ import Predictions from './pages/Predictions'
 import Admin from './pages/Admin'
 import Rules from './pages/Rules'
 import DailyPrediction from './pages/DailyPrediction'
+import PointsBreakdown from './pages/PointsBreakdown'
 import Analytics from './pages/Analytics'
 import ActivityLog from './pages/ActivityLog'
 
@@ -55,6 +56,7 @@ export default function App() {
       >
         <Route index element={<Ranking />} />
         <Route path="daily-prediction" element={<DailyPrediction />} />
+        <Route path="Points-Breakdown" element={<PointsBreakdown />} />
         <Route path="analisis" element={<Analytics />} />
         <Route path="Predictions" element={<Predictions />} />
         <Route path="reglas" element={<Rules />} />
