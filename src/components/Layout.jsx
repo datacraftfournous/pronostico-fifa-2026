@@ -126,7 +126,7 @@ useEffect(() => {
         </NavLink>
 
         <NavLink to="/points" end className={linkClass}>
-          🎯 Points Breakdown
+          🧮 Points Breakdown
         </NavLink>
 
         <NavLink to="/analisis" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
