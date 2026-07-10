@@ -255,7 +255,7 @@ export function calcularPuntosAny(
 
   const total = (base + bono) * multiplicadorParaMatch(match)
 
-  return total
+return aplicarComodin(total, prediction?.joker === true)
 }
 
 export function maxPuntosFor(match) {

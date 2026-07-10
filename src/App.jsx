@@ -56,7 +56,7 @@ export default function App() {
       >
         <Route index element={<Ranking />} />
         <Route path="daily-prediction" element={<DailyPrediction />} />
-        <Route path="Points-Breakdown" element={<PointsBreakdown />} />
+        <Route path="points-breakdown" element={<PointsBreakdown />} />
         <Route path="analisis" element={<Analytics />} />
         <Route path="Predictions" element={<Predictions />} />
         <Route path="reglas" element={<Rules />} />
