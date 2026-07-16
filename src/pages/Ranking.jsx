@@ -908,12 +908,18 @@ function FaseMiniCard({ jugador, fases }) {
 // ───────────────────────────────────────────────
 
 function ProyeccionDashboard({ loading, data, error, onRecargar }) {
+  const [expandido, setExpandido] = useState(null) // nombre del jugador expandido, o null
+
   if (loading) {
     return (
       <div className="loading-screen">
         <div className="loader" />
       </div>
     )
+  }
+
+  function toggle(nombre) {
+    setExpandido((actual) => (actual === nombre ? null : nombre))
   }
 
   return (
@@ -947,39 +953,138 @@ function ProyeccionDashboard({ loading, data, error, onRecargar }) {
         <div className="card" style={{ padding: '1.5rem', overflow: 'auto' }}>
           <h3 style={{ marginTop: 0 }}>🚀 Proyección del campeonato</h3>
 
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
             Simulación suponiendo que cada jugador obtiene todos los puntos pendientes posibles.
+            Toca un jugador para ver el desglose y a quién puede superar.
           </p>
 
           <table className="ranking-table">
             <thead>
               <tr>
+                <th></th>
                 <th>Jugador</th>
                 <th>Puntos actuales</th>
                 <th>Máximo posible</th>
                 <th>Puesto actual</th>
-                <th>Puede llegar</th>
+                <th>Puede llegar a</th>
                 <th>Oportunidad</th>
-                <th>Puede superar</th>
               </tr>
             </thead>
 
             <tbody>
-              {data.map((j) => (
-                <tr key={j.user_id}>
-                  <td>{j.jugador}</td>
-                  <td className="rank-points">{Number(j.puntos_actuales).toFixed(2)}</td>
-                  <td className="rank-points">{Number(j.maximo_posible).toFixed(2)}</td>
-                  <td>{j.puesto_actual}</td>
-                  <td>🏆 {j.puesto_maximo_alcanzable}</td>
-                  <td>{Number(j.indice_oportunidad).toFixed(1)}%</td>
-                  <td style={{ fontSize: '0.85rem' }}>{j.puede_superar_a}</td>
-                </tr>
-              ))}
+              {data.map((j) => {
+                const abierto = expandido === j.jugador
+                const pendientes = Number(j.maximo_posible) - Number(j.puntos_actuales)
+                const listaSuperar = String(j.puede_superar_a || '')
+                  .split(/,\s*(?=[A-ZÁÉÍÓÚÑ])/) // separa por comas antes de un nombre (mayúscula)
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+
+                return (
+                  <>
+                    <tr
+                      key={j.jugador}
+                      onClick={() => toggle(j.jugador)}
+                      style={{ cursor: 'pointer' }}
+                      className={abierto ? 'row-expandida' : ''}
+                    >
+                      <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                        {abierto ? '▾' : '▸'}
+                      </td>
+                      <td>
+                        {medalForRank(j.puesto_actual)} {j.jugador}
+                      </td>
+                      <td className="rank-points" style={{ fontWeight: 600 }}>
+                        {Number(j.puntos_actuales).toFixed(2)}
+                      </td>
+                      <td className="rank-points" style={{ color: 'var(--gold)', fontWeight: 600 }}>
+                        {Number(j.maximo_posible).toFixed(2)}
+                      </td>
+                      <td>{j.puesto_actual}</td>
+                      <td>🏆 {j.puesto_maximo_alcanzable}</td>
+                      <td>
+                        <span
+                          style={{
+                            padding: '0.15rem 0.55rem',
+                            borderRadius: '999px',
+                            fontSize: '0.78rem',
+                            background:
+                              Number(j.indice_oportunidad) >= 50
+                                ? 'rgba(39, 174, 96, 0.15)'
+                                : 'rgba(255,255,255,0.06)',
+                            color:
+                              Number(j.indice_oportunidad) >= 50
+                                ? '#27ae60'
+                                : 'var(--text-muted)',
+                          }}
+                        >
+                          {Number(j.indice_oportunidad).toFixed(1)}%
+                        </span>
+                      </td>
+                    </tr>
+
+                    {abierto && (
+                      <tr key={`${j.jugador}-detalle`}>
+                        <td></td>
+                        <td colSpan={6} style={{ padding: '0.9rem 0.75rem 1.25rem' }}>
+                          <div
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                              gap: '0.75rem',
+                              marginBottom: '1rem',
+                            }}
+                          >
+                            <MiniStat etiqueta="Puntos pendientes" valor={pendientes.toFixed(2)} />
+                            <MiniStat etiqueta="Tercer puesto" valor={Number(j.tercer_puesto).toFixed(2)} />
+                            <MiniStat etiqueta="Final" valor={Number(j.final).toFixed(2)} />
+                            <MiniStat etiqueta="Campeón" valor={j.campeon} />
+                            <MiniStat etiqueta="Goleador" valor={j.goleador} />
+                            <MiniStat etiqueta="Puestos que puede subir" valor={j.puestos_que_puede_subir} />
+                          </div>
+
+                          <div style={{ fontSize: '0.85rem' }}>
+                            <strong style={{ color: 'var(--text-muted)' }}>Puede superar a: </strong>
+                            {listaSuperar.length === 0 || listaSuperar[0] === 'Nadie actualmente' ? (
+                              <span style={{ color: 'var(--text-muted)' }}>Nadie actualmente</span>
+                            ) : (
+                              <ul style={{ margin: '0.4rem 0 0', paddingLeft: '1.1rem' }}>
+                                {listaSuperar.map((linea, i) => (
+                                  <li key={i} style={{ marginBottom: '0.2rem' }}>{linea}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                )
+              })}
             </tbody>
           </table>
         </div>
       )}
+    </div>
+  )
+}
+
+function MiniStat({ etiqueta, valor }) {
+  return (
+    <div
+      style={{
+        padding: '0.6rem 0.75rem',
+        borderRadius: '0.5rem',
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.06)',
+      }}
+    >
+      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+        {etiqueta}
+      </div>
+      <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.15rem' }}>
+        {valor}
+      </div>
     </div>
   )
 }
