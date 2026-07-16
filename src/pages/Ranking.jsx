@@ -467,7 +467,7 @@ export default function Ranking() {
         </div>
       )}
 
-      {vista !== 'analisis' && (
+      {vista !== 'ranking' && (
         <div
           className="card"
           style={{
