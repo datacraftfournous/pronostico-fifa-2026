@@ -249,17 +249,17 @@ export default function Ranking() {
   const [loading, setLoading] = useState(true)
   // 'ranking' = tabla única de posiciones (todos pagan, todos compiten por el bote)
   // 'analisis' = gráficos de aciertos
+  // 'proyeccion' = simulación de máximo posible
   const [vista, setVista] = useState('ranking')
 
   const [statsJugadores, setStatsJugadores] = useState([])
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
   const [analisisCargado, setAnalisisCargado] = useState(false)
 
-
   const [proyeccion, setProyeccion] = useState([])
   const [loadingProyeccion, setLoadingProyeccion] = useState(false)
   const [proyeccionCargada, setProyeccionCargada] = useState(false)
-
+  const [errorProyeccion, setErrorProyeccion] = useState(null)
 
   // Puesto real de cada jugador. "standings" ya viene ordenado por
   // total desc desde Supabase.
@@ -275,15 +275,15 @@ export default function Ranking() {
     }
   }, [vista])
 
-
+  // Un único punto de disparo para la proyección: solo el useEffect.
+  // (Antes también se llamaba loadProyeccion() dentro del onClick del
+  // botón, lo que generaba dos fetch simultáneos y una condición de
+  // carrera al setear el estado.)
   useEffect(() => {
     if (vista === 'proyeccion' && !proyeccionCargada) {
       loadProyeccion()
     }
   }, [vista])
-
-
-
 
   async function loadAnalisis() {
     try {
@@ -309,27 +309,52 @@ export default function Ranking() {
   async function loadProyeccion() {
     try {
       setLoadingProyeccion(true)
+      setErrorProyeccion(null)
 
       const { data, error } = await supabase
         .from('analizar_proyeccion_campeonato')
         .select('*')
 
       if (error) {
-        console.error(error)
+        console.error('Error cargando analizar_proyeccion_campeonato:', error)
+        setErrorProyeccion(
+          `No se pudo cargar la proyección: ${error.message || 'error desconocido'}. ` +
+          `Revisa que la vista/función "analizar_proyeccion_campeonato" exista en Supabase ` +
+          `y que las políticas RLS permitan leerla.`
+        )
+        setProyeccion([])
         return
+      }
+
+      // Aviso de diagnóstico: si por alguna razón la vista está devolviendo
+      // exactamente lo mismo que el ranking normal (puntos actuales ==
+      // máximo posible para todos), lo más probable es que el SQL de la
+      // vista esté mal definido (por ejemplo un SELECT * sobre
+      // ranking_view sin la lógica de "puntos pendientes").
+      if (data && data.length > 0) {
+        const todosIguales = data.every(
+          (row) => Number(row.puntos_actuales) === Number(row.maximo_posible)
+        )
+        if (todosIguales) {
+          setErrorProyeccion(
+            'La vista "analizar_proyeccion_campeonato" está devolviendo el mismo valor ' +
+            'en "puntos_actuales" y "maximo_posible" para todos los jugadores. Esto indica ' +
+            'que la lógica de puntos pendientes en el SQL de esa vista no está funcionando ' +
+            '(es decir, el problema está en la base de datos, no en este componente).'
+          )
+        }
       }
 
       setProyeccion(data || [])
       setProyeccionCargada(true)
-
     } catch (err) {
       console.error(err)
+      setErrorProyeccion(`Error inesperado al cargar la proyección: ${err.message || err}`)
+      setProyeccion([])
     } finally {
       setLoadingProyeccion(false)
     }
   }
-
-
 
   async function loadRanking() {
     try {
@@ -351,6 +376,11 @@ export default function Ranking() {
     } finally {
       setLoading(false)
     }
+  }
+
+  function recargarProyeccion() {
+    setProyeccionCargada(false)
+    loadProyeccion()
   }
 
   function exportPDF() {
@@ -446,8 +476,6 @@ export default function Ranking() {
         >
           🚀 Proyección
         </button>
-
-
       </div>
 
       {vista === 'ranking' && (
@@ -541,11 +569,10 @@ export default function Ranking() {
         <ProyeccionDashboard
           loading={loadingProyeccion}
           data={proyeccion}
+          error={errorProyeccion}
+          onRecargar={recargarProyeccion}
         />
       )}
-
-
-
     </div>
   )
 }
@@ -875,8 +902,12 @@ function FaseMiniCard({ jugador, fases }) {
     </div>
   )
 }
-function ProyeccionDashboard({ loading, data }) {
 
+// ───────────────────────────────────────────────
+// Dashboard de proyección
+// ───────────────────────────────────────────────
+
+function ProyeccionDashboard({ loading, data, error, onRecargar }) {
   if (loading) {
     return (
       <div className="loading-screen">
@@ -885,97 +916,70 @@ function ProyeccionDashboard({ loading, data }) {
     )
   }
 
-
-  if (!data.length) {
-    return (
-      <p style={{ color: 'var(--text-muted)' }}>
-        No hay datos de proyección disponibles.
-      </p>
-    )
-  }
-
-
   return (
-    <div className="card" style={{ padding: '1.5rem', overflow: 'auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {error && (
+        <div
+          className="card"
+          style={{
+            padding: '1rem 1.25rem',
+            border: '1px solid rgba(230, 126, 34, 0.4)',
+            background: 'rgba(230, 126, 34, 0.08)',
+            color: '#e67e22',
+            fontSize: '0.85rem',
+          }}
+        >
+          ⚠️ {error}
+        </div>
+      )}
 
-      <h3>
-        🚀 Proyección del campeonato
-      </h3>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button className="btn" onClick={onRecargar}>
+          🔄 Recargar proyección
+        </button>
+      </div>
 
-      <p style={{
-        color: 'var(--text-muted)',
-        fontSize: '0.85rem'
-      }}>
-        Simulación suponiendo que cada jugador obtiene todos los puntos pendientes posibles.
-      </p>
+      {!data.length ? (
+        <p style={{ color: 'var(--text-muted)' }}>
+          No hay datos de proyección disponibles.
+        </p>
+      ) : (
+        <div className="card" style={{ padding: '1.5rem', overflow: 'auto' }}>
+          <h3 style={{ marginTop: 0 }}>🚀 Proyección del campeonato</h3>
 
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+            Simulación suponiendo que cada jugador obtiene todos los puntos pendientes posibles.
+          </p>
 
-      <table className="ranking-table">
+          <table className="ranking-table">
+            <thead>
+              <tr>
+                <th>Jugador</th>
+                <th>Puntos actuales</th>
+                <th>Máximo posible</th>
+                <th>Puesto actual</th>
+                <th>Puede llegar</th>
+                <th>Oportunidad</th>
+                <th>Puede superar</th>
+              </tr>
+            </thead>
 
-        <thead>
-          <tr>
-            <th>Jugador</th>
-            <th>Puntos actuales</th>
-            <th>Máximo posible</th>
-            <th>Puesto actual</th>
-            <th>Puede llegar</th>
-            <th>Oportunidad</th>
-            <th>Puede superar</th>
-          </tr>
-        </thead>
-
-
-        <tbody>
-
-          {data.map(j => (
-
-            <tr key={j.user_id}>
-
-              <td>
-                {j.jugador}
-              </td>
-
-
-              <td className="rank-points">
-                {Number(j.puntos_actuales).toFixed(2)}
-              </td>
-
-
-              <td className="rank-points">
-                {Number(j.maximo_posible).toFixed(2)}
-              </td>
-
-
-              <td>
-                {j.puesto_actual}
-              </td>
-
-
-              <td>
-                🏆 {j.puesto_maximo_alcanzable}
-              </td>
-
-
-              <td>
-                {Number(j.indice_oportunidad).toFixed(1)}%
-              </td>
-
-
-              <td style={{
-                fontSize: '0.85rem'
-              }}>
-                {j.puede_superar_a}
-              </td>
-
-
-            </tr>
-
-          ))}
-
-        </tbody>
-
-      </table>
-
+            <tbody>
+              {data.map((j) => (
+                <tr key={j.user_id}>
+                  <td>{j.jugador}</td>
+                  <td className="rank-points">{Number(j.puntos_actuales).toFixed(2)}</td>
+                  <td className="rank-points">{Number(j.maximo_posible).toFixed(2)}</td>
+                  <td>{j.puesto_actual}</td>
+                  <td>🏆 {j.puesto_maximo_alcanzable}</td>
+                  <td>{Number(j.indice_oportunidad).toFixed(1)}%</td>
+                  <td style={{ fontSize: '0.85rem' }}>{j.puede_superar_a}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
