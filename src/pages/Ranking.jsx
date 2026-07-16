@@ -888,7 +888,7 @@ function ProyeccionDashboard({ loading, data }) {
 
   if (!data.length) {
     return (
-      <p style={{color:'var(--text-muted)'}}>
+      <p style={{ color: 'var(--text-muted)' }}>
         No hay datos de proyección disponibles.
       </p>
     )
@@ -896,15 +896,15 @@ function ProyeccionDashboard({ loading, data }) {
 
 
   return (
-    <div className="card" style={{padding:'1.5rem', overflow:'auto'}}>
+    <div className="card" style={{ padding: '1.5rem', overflow: 'auto' }}>
 
       <h3>
         🚀 Proyección del campeonato
       </h3>
 
       <p style={{
-        color:'var(--text-muted)',
-        fontSize:'0.85rem'
+        color: 'var(--text-muted)',
+        fontSize: '0.85rem'
       }}>
         Simulación suponiendo que cada jugador obtiene todos los puntos pendientes posibles.
       </p>
@@ -927,50 +927,50 @@ function ProyeccionDashboard({ loading, data }) {
 
         <tbody>
 
-        {data.map(j => (
+          {data.map(j => (
 
-          <tr key={j.user_id}>
+            <tr key={j.user_id}>
 
-            <td>
-              {j.jugador}
-            </td>
-
-
-            <td className="rank-points">
-              {Number(j.puntos_actuales).toFixed(2)}
-            </td>
+              <td>
+                {j.jugador}
+              </td>
 
 
-            <td className="rank-points">
-              {Number(j.maximo_posible).toFixed(2)}
-            </td>
+              <td className="rank-points">
+                {Number(j.puntos_actuales).toFixed(2)}
+              </td>
 
 
-            <td>
-              {j.puesto_actual}
-            </td>
+              <td className="rank-points">
+                {Number(j.maximo_posible).toFixed(2)}
+              </td>
 
 
-            <td>
-              🏆 {j.puesto_maximo_alcanzable}
-            </td>
+              <td>
+                {j.puesto_actual}
+              </td>
 
 
-            <td>
-              {Number(j.indice_oportunidad).toFixed(1)}%
-            </td>
+              <td>
+                🏆 {j.puesto_maximo_alcanzable}
+              </td>
 
 
-            <td style={{
-              fontSize:'0.85rem'
-            }}>
-              {j.puede_superar_a}
-            </td>
+              <td>
+                {Number(j.indice_oportunidad).toFixed(1)}%
+              </td>
 
 
-          </tr>
+              <td style={{
+                fontSize: '0.85rem'
+              }}>
+                {j.puede_superar_a}
+              </td>
 
-        ))}
+
+            </tr>
+
+          ))}
 
         </tbody>
 
