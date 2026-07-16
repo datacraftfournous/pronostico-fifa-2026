@@ -255,6 +255,12 @@ export default function Ranking() {
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
   const [analisisCargado, setAnalisisCargado] = useState(false)
 
+
+  const [proyeccion, setProyeccion] = useState([])
+  const [loadingProyeccion, setLoadingProyeccion] = useState(false)
+  const [proyeccionCargada, setProyeccionCargada] = useState(false)
+
+
   // Puesto real de cada jugador. "standings" ya viene ordenado por
   // total desc desde Supabase.
   const rankingConPuestos = calcularPosiciones(standings)
@@ -268,6 +274,16 @@ export default function Ranking() {
       loadAnalisis()
     }
   }, [vista])
+
+
+  useEffect(() => {
+    if (vista === 'proyeccion' && !proyeccionCargada) {
+      loadProyeccion()
+    }
+  }, [vista])
+
+
+
 
   async function loadAnalisis() {
     try {
@@ -289,6 +305,31 @@ export default function Ranking() {
       setLoadingAnalisis(false)
     }
   }
+
+  async function loadProyeccion() {
+    try {
+      setLoadingProyeccion(true)
+
+      const { data, error } = await supabase
+        .from('analizar_proyeccion_campeonato')
+        .select('*')
+
+      if (error) {
+        console.error(error)
+        return
+      }
+
+      setProyeccion(data || [])
+      setProyeccionCargada(true)
+
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingProyeccion(false)
+    }
+  }
+
+
 
   async function loadRanking() {
     try {
@@ -398,9 +439,18 @@ export default function Ranking() {
         >
           📈 Análisis
         </button>
+
+        <button
+          className={vista === 'proyeccion' ? 'btn btn-gold' : 'btn'}
+          onClick={() => setVista('proyeccion')}
+        >
+          🚀 Proyección
+        </button>
+
+
       </div>
 
-      {vista !== 'analisis' && (
+      {vista === 'ranking' && (
         <div
           style={{
             display: 'flex',
@@ -486,6 +536,16 @@ export default function Ranking() {
           stats={statsJugadores}
         />
       )}
+
+      {vista === 'proyeccion' && (
+        <ProyeccionDashboard
+          loading={loadingProyeccion}
+          data={proyeccion}
+        />
+      )}
+
+
+
     </div>
   )
 }
