@@ -1116,118 +1116,75 @@ h3,
   margin-top: 1rem;
   font-size: 0.9rem;
 }
-.hero{
 
-    position:relative;
+.topbar {
 
-    margin:24px;
+  display: flex;
 
-    border-radius:30px;
+  justify-content: space-between;
 
-    overflow:hidden;
+  align-items: center;
 
-    background:
-    radial-gradient(circle at top right,#2ea8ff25,transparent 45%),
-    radial-gradient(circle at bottom left,#ffd70018,transparent 35%),
-    linear-gradient(135deg,#08111f,#132645);
+  padding: 20px 40px;
 
-    min-height:240px;
+  background: #08111f;
 
-    border:1px solid rgba(255,255,255,.08);
-
-    box-shadow:
-    0 20px 70px rgba(0,0,0,.45);
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
 
 }
 
-.hero::before{
+.brand {
 
-    content:"";
+  display: flex;
 
-    position:absolute;
+  align-items: center;
 
-    inset:0;
-
-    backdrop-filter:blur(60px);
+  gap: 18px;
 
 }
 
-.hero-content{
+.brand-logo {
 
-    position:relative;
+  width: 64px;
 
-    z-index:2;
+  height: 64px;
 
-    padding:55px;
-
-}
-
-.hero-left{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:35px;
+  border-radius: 18px;
 
 }
 
-.hero-logo{
+.brand h1 {
 
-    width:120px;
+  font-size: 2.2rem;
 
-    height:120px;
+  margin: 0;
 
-    border-radius:26px;
-
-    box-shadow:
-    0 0 35px rgba(46,168,255,.25);
+  color: white;
 
 }
 
-.hero-badge{
+.brand span {
 
-    display:inline-flex;
-
-    padding:8px 18px;
-
-    border-radius:999px;
-
-    background:rgba(255,215,0,.08);
-
-    border:1px solid rgba(255,215,0,.45);
-
-    color:#FFD700;
-
-    font-size:.8rem;
-
-    font-weight:700;
-
-    letter-spacing:1px;
+  color: #8fa5c2;
 
 }
 
-.hero-title{
+.competition-pill {
 
-    margin-top:18px;
+  padding: 10px 22px;
 
-    font-size:4rem;
+  border-radius: 999px;
 
-    color:white;
+  border: 1px solid rgba(255, 215, 0, .4);
 
-    line-height:1;
+  color: #ffd700;
 
-}
+  font-weight: 700;
 
-.hero-subtitle{
-
-    margin-top:10px;
-
-    font-size:1.15rem;
-
-    color:#9FB5D0;
+  letter-spacing: 1px;
 
 }
+
 /* =====================================
    RESPONSIVE PARA CELULARES
 ===================================== */

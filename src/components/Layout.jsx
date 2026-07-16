@@ -64,37 +64,34 @@ export default function Layout() {
         </div>
       </div>
 
-      <header className="hero">
+      <header className="topbar">
 
-        <div className="hero-content">
+        <div className="brand">
 
-          <div className="hero-left">
+          <img
+            src={logoTF}
+            className="brand-logo"
+            alt="logo"
+          />
 
-            <img
-              src={logoTF}
-              className="hero-logo"
-              alt="Flagscore"
-            />
+          <div>
 
-            <div>
+            <h1>FLAGSCORE</h1>
 
-              <span className="hero-badge">
-                FIFA WORLD CUP 2026
-              </span>
-
-              <h1 className="hero-title">
-                FLAGSCORE
-              </h1>
-
-              <p className="hero-subtitle">
-                Sports Predictions & Analytics
-              </p>
-
-            </div>
+            <span>
+              Sports Predictions & Analytics
+            </span>
 
           </div>
 
         </div>
+
+        <div className="competition-pill">
+
+          FIFA WORLD CUP 2026
+
+        </div>
+
 
       </header>
       <TodayMatchesStrip />
