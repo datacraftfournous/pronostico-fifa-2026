@@ -1169,22 +1169,63 @@ h3,
 
 }
 
-.competition-pill {
+.brand-info{
 
-  padding: 10px 22px;
-
-  border-radius: 999px;
-
-  border: 1px solid rgba(255, 215, 0, .4);
-
-  color: #ffd700;
-
-  font-weight: 700;
-
-  letter-spacing: 1px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
 
 }
 
+.brand-powered{
+
+    font-size:.75rem;
+    color:#6f89aa;
+    text-transform:uppercase;
+    letter-spacing:1px;
+
+}
+
+.brand-title{
+
+    margin:0;
+    font-size:2rem;
+    color:#fff;
+
+}
+
+.brand-description{
+
+    margin:0;
+    color:#9bb0ca;
+    font-size:1rem;
+
+}
+
+.topbar{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 40px;
+
+}
+
+.header-user{
+
+    display:flex;
+    align-items:center;
+    gap:16px;
+
+}
+
+.user-name{
+
+    color:white;
+    font-weight:600;
+    font-size:1rem;
+
+}
 /* =====================================
    RESPONSIVE PARA CELULARES
 ===================================== */

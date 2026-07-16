@@ -3,7 +3,6 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import logoTF from '../assets/Tiburon_Flag_Icon.jpeg'
-import worldCupBanner from '../assets/Banner.png'
 import { APP_VERSION } from '../version'
 import TodayMatchesStrip from './TodayMatchesStrip'
 
@@ -44,25 +43,6 @@ export default function Layout() {
   return (
     <div className="app-layout">
 
-      <div className="user-bar">
-        <div className="header-user">
-
-          <div className="user-info">
-            Hola,<br />
-            <span className="username">
-              {profile?.display_name}
-            </span>
-          </div>
-
-          <button
-            className="btn-logout"
-            onClick={signOut}
-          >
-            Salir
-          </button>
-
-        </div>
-      </div>
 
       <header className="topbar">
 
@@ -74,25 +54,54 @@ export default function Layout() {
             alt="logo"
           />
 
-          <div>
+          <div className="brand-info">
 
-            <h1>FLAGSCORE</h1>
+            <div className="brand-powered">
+              Powered by FlagScore
+            </div>
 
-            <span>
-              Sports Predictions & Analytics
-            </span>
+            <h1 className="brand-title">
+              🏆 Mundial 2026 Predictor
+            </h1>
+
+            <p className="brand-description">
+              Compite con tus amigos, predice resultados y escala el ranking.
+            </p>
 
           </div>
 
         </div>
 
-        <div className="competition-pill">
+        <div className="header-user">
 
-          FIFA WORLD CUP 2026
+          <div className="user-card">
+
+            <div className="user-avatar">
+              {profile?.display_name?.charAt(0)?.toUpperCase()}
+            </div>
+
+            <div>
+
+              <div className="user-greeting">
+                Hola
+              </div>
+
+              <div className="user-display-name">
+                {profile?.display_name}
+              </div>
+
+            </div>
+
+          </div>
+
+          <button
+            className="btn-logout"
+            onClick={signOut}
+          >
+            Salir
+          </button>
 
         </div>
-
-
       </header>
       <TodayMatchesStrip />
 
