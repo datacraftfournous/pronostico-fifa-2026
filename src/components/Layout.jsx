@@ -65,13 +65,13 @@ useEffect(() => {
       </div>
 
       <header className="app-header">
-
+{/* Banner eliminado 
         <img
           src={worldCupBanner}
           alt="World Cup Banner"
           className="hero-banner-image"
         />
-
+*/}
         <div className="header-overlay">
 
           <div className="header-top">

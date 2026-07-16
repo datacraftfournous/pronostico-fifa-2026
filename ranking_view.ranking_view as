@@ -1,0 +1,31 @@
+create view public.ranking_view as
+select
+  p.id,
+  p.username,
+  p.display_name,
+  p.role,
+  p.has_paid,
+  COALESCE(sum(pr.points), 0::numeric) + case
+    when sp.predicted_champion is not null
+    and sp.predicted_champion = tr.champion then 20
+    else 0
+  end::numeric + case
+    when sp.predicted_top_scorer is not null
+    and sp.predicted_top_scorer = tr.top_scorer then 15
+    else 0
+  end::numeric as total
+from
+  profiles p
+  left join predictions pr on pr.user_id = p.id
+  left join special_predictions sp on sp.user_id = p.id
+  left join tournament_results tr on true
+group by
+  p.id,
+  p.username,
+  p.display_name,
+  p.role,
+  p.has_paid,
+  sp.predicted_champion,
+  sp.predicted_top_scorer,
+  tr.champion,
+  tr.top_scorer;
