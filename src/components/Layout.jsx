@@ -25,18 +25,18 @@ export default function Layout() {
       .then(({ error }) => {
         if (error) console.error('No se pudo registrar la visita:', error.message)
       })
- 
+
   }, [location.pathname, user])
 
-useEffect(() => {
-  const storedVersion = localStorage.getItem('app_version')
-  if (storedVersion && storedVersion !== APP_VERSION) {
+  useEffect(() => {
+    const storedVersion = localStorage.getItem('app_version')
+    if (storedVersion && storedVersion !== APP_VERSION) {
+      localStorage.setItem('app_version', APP_VERSION)
+      signOut()
+      return
+    }
     localStorage.setItem('app_version', APP_VERSION)
-    signOut()
-    return
-  }
-  localStorage.setItem('app_version', APP_VERSION)
-}, [])
+  }, [])
 
   const linkClass = ({ isActive }) =>
     `nav-link${isActive ? ' active' : ''}`
@@ -64,52 +64,39 @@ useEffect(() => {
         </div>
       </div>
 
-      <header className="app-header">
-{/* Banner eliminado 
-        <img
-          src={worldCupBanner}
-          alt="World Cup Banner"
-          className="hero-banner-image"
-        />
-*/}
-        <div className="header-overlay">
+      <header className="hero">
 
-          <div className="header-top">
+        <div className="hero-content">
 
-            <div className="brand-block">
+          <div className="hero-left">
 
-              <img
-                src={logoTF}
-                alt="Tiburón Flag"
-                className="brand-logo"
-              />
+            <img
+              src={logoTF}
+              className="hero-logo"
+              alt="Flagscore"
+            />
 
-              <div className="brand-text">
+            <div>
 
-                <h1>FLAGSCORE</h1>
+              <span className="hero-badge">
+                FIFA WORLD CUP 2026
+              </span>
 
-                <div className="brand-subtitle">
-                  Sports Predictions & Analytics
-                </div>
+              <h1 className="hero-title">
+                FLAGSCORE
+              </h1>
 
-                <div className="brand-company">
-                  by Tiburón Flag
-                </div>
-
-              </div>
+              <p className="hero-subtitle">
+                Sports Predictions & Analytics
+              </p>
 
             </div>
 
           </div>
 
-          <div className="competition-banner">
-            🏆 FIFA WORLD CUP 2026
-          </div>
-
         </div>
 
       </header>
-
       <TodayMatchesStrip />
 
       <nav className="app-nav">
