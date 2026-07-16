@@ -252,10 +252,10 @@ export function calcularPuntosAny(
   const bono = prediction
     ? calcularBonoAvance(prediction.predicted_advancer, match.advancing_team)
     : 0
+   /* Bug , No valida los puntos del Joker , Issue by Hector y Bryan*/
 
   const total = (base + bono) * multiplicadorParaMatch(match)
-
-return aplicarComodin(total, prediction?.joker === true)
+  return aplicarComodin(total, prediction?.joker === true)
 }
 
 export function maxPuntosFor(match) {
