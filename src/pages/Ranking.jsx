@@ -255,10 +255,6 @@ export default function Ranking() {
   const [loadingAnalisis, setLoadingAnalisis] = useState(false)
   const [analisisCargado, setAnalisisCargado] = useState(false)
 
-  // Pronóstico de campeón/goleador de cada jugador, para mostrarlo junto
-  // al ranking. Se indexa por user_id (= profiles.id = ranking_view.id).
-  const [especiales, setEspeciales] = useState({})
-
   // Puesto real de cada jugador. "standings" ya viene ordenado por
   // total desc desde Supabase.
   const rankingConPuestos = calcularPosiciones(standings)
@@ -298,10 +294,10 @@ export default function Ranking() {
     try {
       setLoading(true)
 
-      const [{ data, error }, especialesData] = await Promise.all([
-        supabase.from('ranking_view').select('*').order('total', { ascending: false }),
-        fetchAllRows('special_predictions', 'user_id, predicted_champion, predicted_top_scorer'),
-      ])
+      const { data, error } = await supabase
+        .from('ranking_view')
+        .select('*')
+        .order('total', { ascending: false })
 
       if (error) {
         console.error(error)
@@ -309,12 +305,6 @@ export default function Ranking() {
       }
 
       setStandings(data || [])
-
-      const mapaEspeciales = {}
-      for (const e of especialesData || []) {
-        mapaEspeciales[e.user_id] = e
-      }
-      setEspeciales(mapaEspeciales)
     } catch (err) {
       console.error(err)
     } finally {
@@ -342,15 +332,12 @@ export default function Ranking() {
 
     autoTable(doc, {
       startY: 45,
-      head: [['Posición', 'Participante', 'Campeón', 'Goleador', 'Puntos', 'Premio']],
+      head: [['Posición', 'Participante', 'Puntos', 'Premio']],
       body: rankingConPuestos.map((player) => {
         const premio = calcularPremio(player.puesto)
-        const pick = especiales[player.id]
         return [
           player.puesto,
           player.display_name,
-          pick?.predicted_champion || '—',
-          pick?.predicted_top_scorer || '—',
           player.total,
           premio != null ? formatCOP(premio) : '—',
         ]
@@ -443,8 +430,6 @@ export default function Ranking() {
               <tr>
                 <th>#</th>
                 <th>Participante</th>
-                <th>Campeón</th>
-                <th>Goleador</th>
                 <th>Puntos</th>
                 <th>Premio</th>
               </tr>
@@ -453,7 +438,6 @@ export default function Ranking() {
             <tbody>
               {rankingConPuestos.map((player) => {
                 const premio = calcularPremio(player.puesto)
-                const pick = especiales[player.id]
                 return (
                   <tr key={player.id}>
                     <td className="rank-medal">
@@ -474,14 +458,6 @@ export default function Ranking() {
                           (Admin)
                         </span>
                       )}
-                    </td>
-
-                    <td style={{ color: pick?.predicted_champion ? undefined : 'var(--text-muted)' }}>
-                      {pick?.predicted_champion || '—'}
-                    </td>
-
-                    <td style={{ color: pick?.predicted_top_scorer ? undefined : 'var(--text-muted)' }}>
-                      {pick?.predicted_top_scorer || '—'}
                     </td>
 
                     <td className="rank-points">
