@@ -1212,11 +1212,9 @@ h3,
 }
 
 .header-user{
-
     display:flex;
     align-items:center;
     gap:16px;
-
 }
 
 .user-name{
@@ -1225,6 +1223,46 @@ h3,
     font-weight:600;
     font-size:1rem;
 
+}
+
+.user-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.user-avatar{
+    width:46px;
+    height:46px;
+
+    border-radius:50%;
+
+    background:#1b4f8c;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:#fff;
+    font-size:1.2rem;
+    font-weight:700;
+}
+
+.user-greeting{
+    color:#8fa5c2;
+    font-size:.8rem;
+    line-height:1;
+}
+
+.user-display-name{
+    color:#fff;
+    font-size:1rem;
+    font-weight:600;
+    margin-top:4px;
+}
+
+.btn-logout{
+    margin-left:12px;
 }
 /* =====================================
    RESPONSIVE PARA CELULARES
