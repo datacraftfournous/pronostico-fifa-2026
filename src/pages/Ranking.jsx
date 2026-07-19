@@ -6,7 +6,7 @@ import autoTable from 'jspdf-autotable'
 
 // ───── Configuración del bote ─────
 // 15 jugadores × $20.000 cada uno = $300.000
-const TOTAL_JUGADORES = 15
+const TOTAL_JUGADORES = 14
 const APUESTA_POR_JUGADOR = 20000
 const BOTE_TOTAL = TOTAL_JUGADORES * APUESTA_POR_JUGADOR
 const PORCENTAJES_PREMIO = [0.5, 0.3, 0.2] // 1°, 2°, 3°
